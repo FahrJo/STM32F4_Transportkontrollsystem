@@ -33,8 +33,6 @@ studienarbeit_1\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 studienarbeit_1\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 studienarbeit_1\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_sd.h
 studienarbeit_1\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_sdmmc.h
-studienarbeit_1\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_hcd.h
-studienarbeit_1\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.h
 studienarbeit_1\main.o: ../Inc/fatfs.h
 studienarbeit_1\main.o: ../Middlewares/Third_Party/FatFs/src/ff.h
 studienarbeit_1\main.o: ../Middlewares/Third_Party/FatFs/src/integer.h
@@ -44,4 +42,3 @@ studienarbeit_1\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 studienarbeit_1\main.o: ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h
 studienarbeit_1\main.o: ../Middlewares/Third_Party/FatFs/src/diskio.h
 studienarbeit_1\main.o: ../Inc/sd_diskio.h
-studienarbeit_1\main.o: ../Inc/usb_host.h

@@ -77,8 +77,8 @@
 #define User_Button_GPIO_Port GPIOA
 #define ADC_Fotodiode_Pin GPIO_PIN_1
 #define ADC_Fotodiode_GPIO_Port GPIOA
-#define ADC_NTC_Pin GPIO_PIN_2
-#define ADC_NTC_GPIO_Port GPIOA
+#define ADC_Temp_ext_Pin GPIO_PIN_2
+#define ADC_Temp_ext_GPIO_Port GPIOA
 #define I2S3_WS_Pin GPIO_PIN_4
 #define I2S3_WS_GPIO_Port GPIOA
 #define SPI1_SCK_Pin GPIO_PIN_5

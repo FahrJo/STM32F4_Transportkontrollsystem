@@ -38,7 +38,5 @@ studienarbeit_1\ff_gen_drv.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_
 studienarbeit_1\ff_gen_drv.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 studienarbeit_1\ff_gen_drv.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_sd.h
 studienarbeit_1\ff_gen_drv.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_sdmmc.h
-studienarbeit_1\ff_gen_drv.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_hcd.h
-studienarbeit_1\ff_gen_drv.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.h
 studienarbeit_1\ff_gen_drv.o: ../Inc/bsp_driver_sd.h
 studienarbeit_1\ff_gen_drv.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

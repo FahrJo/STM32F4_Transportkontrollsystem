@@ -155,7 +155,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
+	//test ob der spaﬂ auch funktioniert
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

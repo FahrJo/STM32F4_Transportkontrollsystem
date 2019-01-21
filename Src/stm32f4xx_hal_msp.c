@@ -102,13 +102,12 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     __HAL_RCC_ADC1_CLK_ENABLE();
   
     /**ADC1 GPIO Configuration    
-    PA1     ------> ADC1_IN1
-    PA2     ------> ADC1_IN2 
+    PA1     ------> ADC1_IN1 
     */
-    GPIO_InitStruct.Pin = ADC_Fotodiode_Pin|ADC_Temp_ext_Pin;
+    GPIO_InitStruct.Pin = ADC_Temp_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_Init(ADC_Temp_GPIO_Port, &GPIO_InitStruct);
 
     /* ADC1 DMA Init */
     /* ADC1 Init */
@@ -116,7 +115,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     hdma_adc1.Init.Channel = DMA_CHANNEL_0;
     hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
-    hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_adc1.Init.MemInc = DMA_MINC_DISABLE;
     hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
     hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
     hdma_adc1.Init.Mode = DMA_CIRCULAR;
@@ -151,10 +150,9 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     __HAL_RCC_ADC1_CLK_DISABLE();
   
     /**ADC1 GPIO Configuration    
-    PA1     ------> ADC1_IN1
-    PA2     ------> ADC1_IN2 
+    PA1     ------> ADC1_IN1 
     */
-    HAL_GPIO_DeInit(GPIOA, ADC_Fotodiode_Pin|ADC_Temp_ext_Pin);
+    HAL_GPIO_DeInit(ADC_Temp_GPIO_Port, ADC_Temp_Pin);
 
     /* ADC1 DMA DeInit */
     HAL_DMA_DeInit(hadc->DMA_Handle);

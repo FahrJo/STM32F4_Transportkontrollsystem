@@ -75,10 +75,14 @@
 #define PDM_OUT_GPIO_Port GPIOC
 #define User_Button_Pin GPIO_PIN_0
 #define User_Button_GPIO_Port GPIOA
-#define ADC_Fotodiode_Pin GPIO_PIN_1
-#define ADC_Fotodiode_GPIO_Port GPIOA
-#define ADC_Temp_ext_Pin GPIO_PIN_2
-#define ADC_Temp_ext_GPIO_Port GPIOA
+#define ADC_Temp_Pin GPIO_PIN_1
+#define ADC_Temp_GPIO_Port GPIOA
+#define INT_Photodiode_Pin GPIO_PIN_2
+#define INT_Photodiode_GPIO_Port GPIOA
+#define INT_Photodiode_EXTI_IRQn EXTI2_IRQn
+#define INT_Acceleration_Pin GPIO_PIN_3
+#define INT_Acceleration_GPIO_Port GPIOA
+#define INT_Acceleration_EXTI_IRQn EXTI3_IRQn
 #define I2S3_WS_Pin GPIO_PIN_4
 #define I2S3_WS_GPIO_Port GPIOA
 #define SPI1_SCK_Pin GPIO_PIN_5
@@ -123,12 +127,6 @@
 #define SWO_GPIO_Port GPIOB
 #define Audio_SCL_Pin GPIO_PIN_6
 #define Audio_SCL_GPIO_Port GPIOB
-#define Acceleration_INT1_Pin GPIO_PIN_0
-#define Acceleration_INT1_GPIO_Port GPIOE
-#define Acceleration_INT1_EXTI_IRQn EXTI0_IRQn
-#define Acceleration_INT2_Pin GPIO_PIN_1
-#define Acceleration_INT2_GPIO_Port GPIOE
-#define Acceleration_INT2_EXTI_IRQn EXTI1_IRQn
 
 /* ########################## Assert Selection ############################## */
 /**

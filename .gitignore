@@ -6,3 +6,7 @@ MDK-ARM/Studienarbeit_1.uvguix.Johannes
 MDK-ARM/Studienarbeit_1/Studienarbeit_1.hex
 MDK-ARM/Studienarbeit_1/Studienarbeit_1.axf
 MDK-ARM/Studienarbeit_1/main.o
+MDK-ARM/Studienarbeit_1.uvguix.Johannes
+*.o
+*.d
+*.crf

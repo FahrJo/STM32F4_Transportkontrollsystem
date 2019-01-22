@@ -1,5 +1,6 @@
 studienarbeit_1\main.o: ../Src/main.c
 studienarbeit_1\main.o: ../Inc/main.h
+studienarbeit_1\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 studienarbeit_1\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
 studienarbeit_1\main.o: ../Inc/stm32f4xx_hal_conf.h
 studienarbeit_1\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h
@@ -7,7 +8,6 @@ studienarbeit_1\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h
 studienarbeit_1\main.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h
 studienarbeit_1\main.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h
 studienarbeit_1\main.o: ../Drivers/CMSIS/Include/core_cm4.h
-studienarbeit_1\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 studienarbeit_1\main.o: ../Drivers/CMSIS/Include/core_cmInstr.h
 studienarbeit_1\main.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 studienarbeit_1\main.o: ../Drivers/CMSIS/Include/core_cmFunc.h
@@ -42,3 +42,5 @@ studienarbeit_1\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 studienarbeit_1\main.o: ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h
 studienarbeit_1\main.o: ../Middlewares/Third_Party/FatFs/src/diskio.h
 studienarbeit_1\main.o: ../Inc/sd_diskio.h
+studienarbeit_1\main.o: ../Src/card_operations.h
+studienarbeit_1\main.o: ../Src/acceleration_Sensor.h

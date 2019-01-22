@@ -51,6 +51,10 @@ Section Cross References
     main.o(i.main) refers to main.o(.bss) for .bss
     main.o(i.main) refers to fatfs.o(.data) for SDPath
     main.o(i.main) refers to main.o(.data) for .data
+    main.o(i.read_register) refers to stm32f4xx_hal_i2c.o(i.HAL_I2C_Mem_Read) for HAL_I2C_Mem_Read
+    main.o(i.read_register) refers to main.o(.bss) for .bss
+    main.o(i.write_register) refers to stm32f4xx_hal_i2c.o(i.HAL_I2C_Mem_Write) for HAL_I2C_Mem_Write
+    main.o(i.write_register) refers to main.o(.bss) for .bss
     bsp_driver_sd.o(i.BSP_SD_DMA_Rx_IRQHandler) refers to stm32f4xx_hal_dma.o(i.HAL_DMA_IRQHandler) for HAL_DMA_IRQHandler
     bsp_driver_sd.o(i.BSP_SD_DMA_Rx_IRQHandler) refers to main.o(.bss) for hsd
     bsp_driver_sd.o(i.BSP_SD_DMA_Tx_IRQHandler) refers to stm32f4xx_hal_dma.o(i.HAL_DMA_IRQHandler) for HAL_DMA_IRQHandler
@@ -776,6 +780,9 @@ Removing Unused input sections from the image.
     Removing main.o(.rev16_text), (4 bytes).
     Removing main.o(.revsh_text), (4 bytes).
     Removing main.o(.rrx_text), (6 bytes).
+    Removing main.o(i.convert), (12 bytes).
+    Removing main.o(i.read_register), (36 bytes).
+    Removing main.o(i.write_register), (36 bytes).
     Removing bsp_driver_sd.o(.rev16_text), (4 bytes).
     Removing bsp_driver_sd.o(.revsh_text), (4 bytes).
     Removing bsp_driver_sd.o(.rrx_text), (6 bytes).

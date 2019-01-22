@@ -78,6 +78,7 @@ static void MX_SDIO_SD_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+HAL_StatusTypeDef write_register(uint8_t device_slave_adress, uint8_t register_pointer, uint16_t register_data_to_write, uint16_t number_bytes_to_write);
 
 /* USER CODE END PFP */
 
@@ -472,6 +473,50 @@ static void MX_GPIO_Init(void)
 		HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
 	}
 }*/
+
+// Schreibt Daten an ein Register eines I2C Gerätes
+// HAL_OK, HAL_ERROR, HAL_BUSY, HAL_TIMEOUT -> HAL_StatusTypeDef;
+// TODO silas, evtl um Registerbreite erweitern dann fällt number of bytes to write weg
+// bei lese funktion reicht das nicht da evtl autoIncrement. diese dann weiter kapseln in readAccelerometerData
+HAL_StatusTypeDef write_register(uint8_t device_slave_adress, uint8_t register_pointer, uint16_t register_data_to_write, uint16_t number_bytes_to_write)
+{
+    HAL_StatusTypeDef status = HAL_OK;
+
+    status = HAL_I2C_Mem_Write(&hi2c3, device_slave_adress, (uint16_t)register_pointer, I2C_MEMADD_SIZE_8BIT, (uint8_t*)(&register_data_to_write), number_bytes_to_write, 100); 
+
+    /* Check the communication status */
+    if(status != HAL_OK)
+    {
+        // Error handling, for example re-initialization of the I2C peripheral
+    }
+		return status;
+}
+
+// Register lesen. 
+HAL_StatusTypeDef read_register(uint8_t device_slave_adress, uint8_t register_pointer, uint16_t register_data_read, uint8_t number_bytes_to_read)
+{
+	HAL_StatusTypeDef status = HAL_OK;
+	
+	status = HAL_I2C_Mem_Read(&hi2c3, device_slave_adress, (uint16_t)register_pointer, I2C_MEMADD_SIZE_8BIT, (uint8_t*)(&register_data_read), number_bytes_to_read, 200);
+	/* Check the communication status */
+	if(status != HAL_OK)
+	{
+			// Error handling, for example re-initialization of the I2C peripheral
+	}
+	return status;
+}
+
+// Convert Received Data in Acceleration 
+// Pram: breiteInBit ist entweder 8 oder 12bit / messbereich +-2, 4, 8 g
+// für das speichern der Werte wäre uint16_t sinnvoller als float
+float convert(uint16_t rohDaten, uint8_t breiteInBit, uint8_t messbereich)
+{
+	// 0111 1111 1111 = +1.999 / 3.998 / 7.996
+	// 0000 0000 0001 = 0.001 / 0.002 / 0.004
+	// 1111 1111 1111 = -0.001 / -0.002 / -0.004
+	// 1000 0000 0000 = -2 / -4 / -8
+	return 0;
+}
 
 /* USER CODE END 4 */
 

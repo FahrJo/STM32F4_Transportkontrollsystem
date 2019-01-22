@@ -73,7 +73,13 @@ SD_HandleTypeDef hsd;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+FATFS myFatFS;
+FIL logFile;
+UINT cursor;
+char logFileName[] = "Log2.csv";
+char header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Note\n";
+uint32_t Temp_Raw;
+dataset sensor_set;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,12 +96,7 @@ static void MX_SDIO_SD_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-FATFS myFatFS;
-FIL logFile;
-UINT cursor;
-char logFileName[] = "Log2.csv";
 
-uint32_t Temp_Raw;
 /* USER CODE END 0 */
 
 /**
@@ -133,29 +134,24 @@ int main(void)
   MX_FATFS_Init();
   MX_SDIO_SD_Init();
   /* USER CODE BEGIN 2 */
+	
+	/* Prepare SD-Card ---------------------------------------------------------*/
 	if(SDIO_ENABLE){
 		if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
+			if(write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor) != FR_OK){
+				HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
+			}
+		}
+		else{
 			HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
-			
-			
-			if(f_open(&logFile, logFileName, FA_WRITE | FA_CREATE_ALWAYS) == FR_OK){
-				HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_SET);
-				
-				char header[] = "Tracking-Log vom 17.01.2019;;;\n Date/Time;Location;Temp;Note\n";
-				if(f_write(&logFile, header, sizeof(header), &cursor) == FR_OK){
-					HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
-				}
-				f_close(&logFile);
-			}
-			else{
-				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-			}
 		}
 	}
 	
-	
-	HAL_ADC_Start_DMA(&hadc1, &Temp_Raw, 1);
-	HAL_ADC_Start_IT(&hadc1);
+	/* Start ADC ---------------------------------------------------------------*/
+	if(TEMP_ENABLE){
+		HAL_ADC_Start_DMA(&hadc1, &Temp_Raw, 1);
+		HAL_ADC_Start_IT(&hadc1);
+	}
 
   /* USER CODE END 2 */
 
@@ -166,9 +162,9 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-		
-		HAL_ADC_Start_IT(&hadc1);
-		HAL_Delay(100);
+		if(TEMP_ENABLE){
+			HAL_ADC_Start_IT(&hadc1);
+		}
 		
 		if(LIGHT_ENABLE){
 			if(HAL_GPIO_ReadPin(INT_Photodiode_GPIO_Port, INT_Photodiode_Pin) == 1){
@@ -178,6 +174,8 @@ int main(void)
 				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
 			}
 		}
+		
+		HAL_Delay(100);
   }
   /* USER CODE END 3 */
 

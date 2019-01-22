@@ -27,7 +27,29 @@ Project File Date:  01/22/2019
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 5 (build 528)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'Studienarbeit_1'
-"Studienarbeit_1\Studienarbeit_1.axf" - 0 Error(s), 0 Warning(s).
+compiling card_operations.c...
+..\Src\card_operations.c(5): error:  #79: expected a type specifier
+  	if(f_open(logFile_p, logFileName_p, FA_WRITE | FA_CREATE_ALWAYS) == FR_OK){
+..\Src\card_operations.c(5): error:  #18: expected a ")"
+  	if(f_open(logFile_p, logFileName_p, 
+A_WRITE | 
+A_CREATE_ALWAYS) == FR_OK){
+..\Src\card_operations.c(3): error:  #141-D: unnamed prototyped parameters not allowed when body is present
+  FRESULT write_dataset_to_file(FIL* logFile_p, 
+..\Src\card_operations.c(9): error:  #20: identifier "logFile" is undefined
+  		if(f_write(&logFile, header, sizeof(header), &cursor) == FR_OK){
+..\Src\card_operations.c(9): error:  #20: identifier "cursor" is undefined
+  		if(f_write(&logFile, header, sizeof(header), &cursor) == FR_OK){
+..\Src\card_operations.c(12): error:  #20: identifier "logFile" is undefined
+  		f_close(&logFile);
+..\Src\card_operations.c(13): warning:  #940-D: missing return statement at end of non-void function "write_dataset_to_file" 
+  	}
+..\Src\card_operations.c(14): error:  #169: expected a declaration
+  	else{
+..\Src\card_operations.c(16): warning: At end of source:  #12-D: parsing restarts here after previous syntax error
+..\Src\card_operations.c: 2 warnings, 7 errors
+compiling main.c...
+"Studienarbeit_1\Studienarbeit_1.axf" - 7 Error(s), 2 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -50,7 +72,8 @@ Package Vendor: Keil
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.0.2
-Build Time Elapsed:  00:00:02
+Target not created.
+Build Time Elapsed:  00:00:04
 </pre>
 </body>
 </html>

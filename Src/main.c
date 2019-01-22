@@ -93,6 +93,7 @@ static void MX_SDIO_SD_Init(void);
 FATFS myFatFS;
 FIL logFile;
 UINT cursor;
+char logFileName[] = "Log2.csv";
 
 uint32_t Temp_Raw;
 /* USER CODE END 0 */
@@ -136,7 +137,7 @@ int main(void)
 		if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
 			HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
 			
-			char logFileName[] = "Log2.csv";
+			
 			if(f_open(&logFile, logFileName, FA_WRITE | FA_CREATE_ALWAYS) == FR_OK){
 				HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_SET);
 				

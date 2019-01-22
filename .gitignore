@@ -1,2 +1,5 @@
 
 MDK-ARM/Studienarbeit_1.uvguix.Johannes
+*.o
+*.hex
+*.axf

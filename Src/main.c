@@ -52,7 +52,7 @@
 #include "fatfs.h"
 
 /* USER CODE BEGIN Includes */
-
+//#include "card_operations.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -152,20 +152,19 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	//test ob der spaﬂ auch funktioniert
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
 		
 		HAL_ADC_Start_IT(&hadc1);
-		HAL_Delay(1000);
+		HAL_Delay(100);
 		
-		/*if(HAL_GPIO_ReadPin(User_Button_GPIO_Port, User_Button_Pin) == 1){
-			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, 1);
+		if(HAL_GPIO_ReadPin(INT_Photodiode_GPIO_Port, INT_Photodiode_Pin) == 1){
+			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 		}
 		else{
-			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, 0);
-		}*/
+			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+		}
   }
   /* USER CODE END 3 */
 

@@ -385,6 +385,16 @@
               <FileType>2</FileType>
               <FilePath>startup_stm32f407xx.s</FilePath>
             </File>
+            <File>
+              <FileName>card_operations.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\card_operations.c</FilePath>
+            </File>
+            <File>
+              <FileName>card_operations.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\card_operations.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -419,6 +429,16 @@
               <FileName>stm32f4xx_hal_msp.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32f4xx_hal_msp.c</FilePath>
+            </File>
+            <File>
+              <FileName>card_operations.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\card_operations.c</FilePath>
+            </File>
+            <File>
+              <FileName>card_operations.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\card_operations.h</FilePath>
             </File>
           </Files>
         </Group>

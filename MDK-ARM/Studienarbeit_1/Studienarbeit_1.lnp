@@ -1,11 +1,13 @@
 --cpu=Cortex-M4.fp
 "studienarbeit_1\startup_stm32f407xx.o"
+"studienarbeit_1\card_operations.o"
 "studienarbeit_1\main.o"
 "studienarbeit_1\bsp_driver_sd.o"
 "studienarbeit_1\sd_diskio.o"
 "studienarbeit_1\fatfs.o"
 "studienarbeit_1\stm32f4xx_it.o"
 "studienarbeit_1\stm32f4xx_hal_msp.o"
+"studienarbeit_1\card_operations_1.o"
 "studienarbeit_1\stm32f4xx_hal_adc.o"
 "studienarbeit_1\stm32f4xx_hal_adc_ex.o"
 "studienarbeit_1\stm32f4xx_hal_i2c.o"

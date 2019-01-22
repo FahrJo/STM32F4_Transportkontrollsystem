@@ -78,7 +78,9 @@ static void MX_SDIO_SD_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-HAL_StatusTypeDef write_register(uint8_t device_slave_adress, uint8_t register_pointer, uint16_t register_data_to_write, uint16_t number_bytes_to_write);
+HAL_StatusTypeDef i2c_write_register(uint8_t device_slave_adress, uint8_t register_pointer, uint16_t register_data_to_write, uint16_t number_bytes_to_write);
+HAL_StatusTypeDef i2c_read_register(uint8_t device_slave_adress, uint8_t register_pointer, uint8_t *register_data_read_buffer, uint8_t number_bytes_to_read);
+HAL_StatusTypeDef getAllAccelerometerValues(s_accelerometerValues *accValues);
 
 /* USER CODE END PFP */
 
@@ -476,13 +478,14 @@ static void MX_GPIO_Init(void)
 
 // Schreibt Daten an ein Register eines I2C Gerätes
 // HAL_OK, HAL_ERROR, HAL_BUSY, HAL_TIMEOUT -> HAL_StatusTypeDef;
-// TODO silas, evtl um Registerbreite erweitern dann fällt number of bytes to write weg
-// bei lese funktion reicht das nicht da evtl autoIncrement. diese dann weiter kapseln in readAccelerometerData
-HAL_StatusTypeDef write_register(uint8_t device_slave_adress, uint8_t register_pointer, uint16_t register_data_to_write, uint16_t number_bytes_to_write)
+// 
+HAL_StatusTypeDef i2c_write_register(uint8_t device_slave_adress, uint8_t register_pointer 
+																		,uint16_t register_data_to_write, uint16_t number_bytes_to_write)
 {
     HAL_StatusTypeDef status = HAL_OK;
 
-    status = HAL_I2C_Mem_Write(&hi2c3, device_slave_adress, (uint16_t)register_pointer, I2C_MEMADD_SIZE_8BIT, (uint8_t*)(&register_data_to_write), number_bytes_to_write, 100); 
+    status = HAL_I2C_Mem_Write(&hi2c3, device_slave_adress, (uint16_t)register_pointer, I2C_MEMADD_SIZE_8BIT 
+															,(uint8_t*)(&register_data_to_write), number_bytes_to_write, 100); 
 
     /* Check the communication status */
     if(status != HAL_OK)
@@ -493,7 +496,8 @@ HAL_StatusTypeDef write_register(uint8_t device_slave_adress, uint8_t register_p
 }
 
 // beliebiges Register lesen. 
-HAL_StatusTypeDef read_register(uint8_t device_slave_adress, uint8_t register_pointer, uint8_t *register_data_read_buffer, uint8_t number_bytes_to_read)
+HAL_StatusTypeDef i2c_read_register(uint8_t device_slave_adress, uint8_t register_pointer
+																		,uint8_t *register_data_read_buffer, uint8_t number_bytes_to_read)
 {
 	HAL_StatusTypeDef status = HAL_OK;
 	
@@ -513,7 +517,7 @@ HAL_StatusTypeDef getAllAccelerometerValues(s_accelerometerValues *accValues)
 	HAL_StatusTypeDef status = HAL_OK;
 	int8_t receiveBuffer[6];
 	
-	status = read_register(ACCELEROMETER_I2C_ADRESS, ACC_OUT_X_MSB, (uint8_t*)&receiveBuffer, 6);
+	status = i2c_read_register(ACCELEROMETER_I2C_ADRESS, ACC_OUT_X_MSB, (uint8_t*)&receiveBuffer, 6);
 	
 	if (status!=HAL_OK)return status; // bei Fehler Funktion hier mit status Rueckgabe verlassen
 //X_Wert_14_0 = (X_MSB<<5) || (X_LSB>>2)

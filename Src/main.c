@@ -81,6 +81,8 @@ char header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Accelera
 uint32_t Temp_Raw;
 uint16_t Temp;
 dataset sensor_set;
+workmode_type operation_mode;
+event_type event;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -479,6 +481,15 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	operation_mode = log;
+	if(GPIO_Pin == INT_Photodiode_Pin){
+		event = open_event;
+	}
+	else if(GPIO_Pin == INT_Acceleration_Pin){
+		event = vibration_event;
+	}
+}
 
 
 

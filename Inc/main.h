@@ -158,6 +158,19 @@ typedef struct {
 	int16_t y_Value;
 	int16_t z_Value;
 }s_accelerometerValues;
+
+typedef enum {
+	sleep = 0,
+	active,
+	log
+} workmode_type;
+
+typedef enum {
+	open_event = 0,
+	vibration_event,
+	temp_event
+} event_type;
+	
 	 
 /* USER CODE END Private defines */
 

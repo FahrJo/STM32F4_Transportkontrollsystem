@@ -55,11 +55,11 @@
 #include "card_operations.h"
 #include "acceleration_Sensor.h"
 
-#define SDIO_ENABLE 					0
+#define SDIO_ENABLE 					1
 #define ACCELERATION_ENABLE 	1
-#define GNSS_ENABLE 					0
-#define LIGHT_ENABLE 					0
-#define TEMP_ENABLE 					0
+#define GNSS_ENABLE 					1
+#define LIGHT_ENABLE 					1
+#define TEMP_ENABLE 					1
 
 /* USER CODE END Includes */
 
@@ -95,7 +95,6 @@ FIL logFile;
 UINT cursor;
 char logFileName[] = "Log2.csv";
 
-s_accelerometerValues acceleration_actual_global;
 uint32_t Temp_Raw;
 /* USER CODE END 0 */
 
@@ -107,8 +106,7 @@ uint32_t Temp_Raw;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	s_accelerometerValues acceleration_actual;
-	s_accelerometerValues acceleration_ringbuffer[ACC_MAX_ANZAHL_WERTE];
+
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -135,7 +133,6 @@ int main(void)
   MX_FATFS_Init();
   MX_SDIO_SD_Init();
   /* USER CODE BEGIN 2 */
-	HAL_Delay(100); // zu begin, damit alles sicher initialisiert ist
 	if(SDIO_ENABLE){
 		if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
 			HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
@@ -156,13 +153,6 @@ int main(void)
 		}
 	}
 	
-	if(ACCELERATION_ENABLE){
-		ACC_deactivate(&hi2c3);
-		HAL_Delay(200);
-		ACC_activate(&hi2c3);
-		HAL_Delay(200);
-		
-	}
 	
 	HAL_ADC_Start_DMA(&hadc1, &Temp_Raw, 1);
 	HAL_ADC_Start_IT(&hadc1);
@@ -176,37 +166,6 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-		
-		if(ACCELERATION_ENABLE)
-		{
-			// wenn Button == 1 leuchten alle 4 durchgehend
-			// wenn Lesefehler dann blinken alle 10mal
-			while(HAL_GPIO_ReadPin(User_Button_GPIO_Port, User_Button_Pin) == 1)
-				{
-				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_SET);
-				HAL_Delay(10);
-				}
-			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_RESET);
-		ACC_activate(&hi2c3);
-		HAL_Delay(200);
-			if(HAL_OK != ACC_getAllValues(&hi2c3, &acceleration_actual))
-				{
-				for(int i=0;i<10;i++)
-					{
-					HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_SET);
-					HAL_Delay(200);
-					HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_RESET);
-					HAL_Delay(200);
-					}
-				}
-			else
-				{
-					acceleration_actual_global = acceleration_actual;
-					HAL_Delay(2000);
-				}
-			HAL_Delay(2000);
-		}
-		
 		
 		HAL_ADC_Start_IT(&hadc1);
 		HAL_Delay(100);

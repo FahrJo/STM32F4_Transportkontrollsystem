@@ -1,0 +1,79 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: µVision V5.24.2.0
+Copyright (C) 2017 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: Johannes Fahr, JF, LIC=----
+ 
+Tool Versions:
+Toolchain:       MDK-Lite  Version: 5.24.1
+Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 5 (build 528)
+Assembler:       Armasm.exe V5.06 update 5 (build 528)
+Linker/Locator:  ArmLink.exe V5.06 update 5 (build 528)
+Library Manager: ArmAr.exe V5.06 update 5 (build 528)
+Hex Converter:   FromElf.exe V5.06 update 5 (build 528)
+CPU DLL:         SARMCM3.DLL V5.24.1
+Dialog DLL:      DCM.DLL V1.16.0.0
+Target DLL:      STLink\ST-LINKIII-KEIL_SWO.dll V3.0.1.0
+Dialog DLL:      TCM.DLL V1.32.0.0
+ 
+<h2>Project:</h2>
+Z:\Documents\KEIL\Studienarbeit_1\MDK-ARM\Studienarbeit_1.uvprojx
+Project File Date:  01/22/2019
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 5 (build 528)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
+Build target 'Studienarbeit_1'
+compiling card_operations.c...
+..\Src\card_operations.c(5): error:  #79: expected a type specifier
+  	if(f_open(logFile_p, logFileName_p, FA_WRITE | FA_CREATE_ALWAYS) == FR_OK){
+..\Src\card_operations.c(5): error:  #18: expected a ")"
+  	if(f_open(logFile_p, logFileName_p, 
+A_WRITE | 
+A_CREATE_ALWAYS) == FR_OK){
+..\Src\card_operations.c(3): error:  #141-D: unnamed prototyped parameters not allowed when body is present
+  FRESULT write_dataset_to_file(FIL* logFile_p, 
+..\Src\card_operations.c(9): error:  #20: identifier "logFile" is undefined
+  		if(f_write(&logFile, header, sizeof(header), &cursor) == FR_OK){
+..\Src\card_operations.c(9): error:  #20: identifier "cursor" is undefined
+  		if(f_write(&logFile, header, sizeof(header), &cursor) == FR_OK){
+..\Src\card_operations.c(12): error:  #20: identifier "logFile" is undefined
+  		f_close(&logFile);
+..\Src\card_operations.c(13): warning:  #940-D: missing return statement at end of non-void function "write_dataset_to_file" 
+  	}
+..\Src\card_operations.c(14): error:  #169: expected a declaration
+  	else{
+..\Src\card_operations.c(16): warning: At end of source:  #12-D: parsing restarts here after previous syntax error
+..\Src\card_operations.c: 2 warnings, 7 errors
+compiling main.c...
+"Studienarbeit_1\Studienarbeit_1.axf" - 7 Error(s), 2 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.5.1.1.pack
+                ARM.CMSIS.5.1.1
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+   * Component: CORE Version: 5.0.2
+
+Package Vendor: Keil
+                http://www.keil.com/pack/Keil.STM32F4xx_DFP.2.11.0.pack
+                Keil.STM32F4xx_DFP.2.11.0
+                STMicroelectronics STM32F4 Series Device Support, Drivers and Examples
+
+<h2>Collection of Component include folders:</h2>
+  .\RTE\_Studienarbeit_1
+  C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include
+  C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.11.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:5.0.2
+Target not created.
+Build Time Elapsed:  00:00:04
+</pre>
+</body>
+</html>

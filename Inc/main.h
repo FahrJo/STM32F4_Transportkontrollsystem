@@ -136,7 +136,28 @@
 /* #define USE_FULL_ASSERT    1U */
 
 /* USER CODE BEGIN Private defines */
-#define	ACC_MAX_ANZAHL_WERTE 50
+
+/* Reg 0x0B System mode. Default value: 00.
+00: Standby mode
+01: Wake mode
+10: Sleep mode
+READ ONLY !!!! */
+
+#define ACC_OUT_X_MSB 0x01
+#define ACC_OUT_X_LSB 0x02
+#define ACC_OUT_Y_MSB 0x03
+#define ACC_OUT_Y_LSB 0x04
+#define ACC_OUT_Z_MSB 0x05
+#define ACC_OUT_Z_LSB 0x06
+// 001110(0/1)+R/W   0011 100x  /bzw/ 0011 101x   0x1C, 0x1D wären die Beiden ohne r/w bit
+#define ACCELEROMETER_I2C_ADRESS 0x1C
+
+
+typedef struct {
+	int16_t x_Value;
+	int16_t y_Value;
+	int16_t z_Value;
+}s_accelerometerValues;
 	 
 /* USER CODE END Private defines */
 

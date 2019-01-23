@@ -2,6 +2,7 @@
 #include "stm32f4xx_hal.h"
 #include "fatfs.h"
 #include "main.h"
+#include "acceleration_Sensor.h"
 #include <stdint.h>
 #include <time.h>
 #include <string.h>

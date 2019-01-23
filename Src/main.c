@@ -73,16 +73,7 @@ SD_HandleTypeDef hsd;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-FATFS myFatFS;
-FIL logFile;
-UINT cursor;
-char logFileName[] = "Log2.csv";
-char header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Note\n";
-uint32_t Temp_Raw;
-uint16_t Temp;
-dataset sensor_set;
-workmode_type operation_mode;
-event_type event;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -99,12 +90,13 @@ static void MX_SDIO_SD_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+FATFS myFatFS;
+FIL logFile;
+UINT cursor;
+char logFileName[] = "Log2.csv";
 
-<<<<<<< HEAD
 s_accelerometerValues acceleration_actual_global;
 uint32_t Temp_Raw;
-=======
->>>>>>> 70ca3aa93a37fd69886c2bc45ad98ccd02cdfd11
 /* USER CODE END 0 */
 
 /**
@@ -143,22 +135,27 @@ int main(void)
   MX_FATFS_Init();
   MX_SDIO_SD_Init();
   /* USER CODE BEGIN 2 */
-<<<<<<< HEAD
 	HAL_Delay(100); // zu begin, damit alles sicher initialisiert ist
-=======
-	
-	/* Prepare SD-Card ---------------------------------------------------------*/
->>>>>>> 70ca3aa93a37fd69886c2bc45ad98ccd02cdfd11
 	if(SDIO_ENABLE){
 		if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
-			write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor);
-		}
-		else{
-			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
+			
+			
+			if(f_open(&logFile, logFileName, FA_WRITE | FA_CREATE_ALWAYS) == FR_OK){
+				HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_SET);
+				
+				char header[] = "Tracking-Log vom 17.01.2019;;;\n Date/Time;Location;Temp;Note\n";
+				if(f_write(&logFile, header, sizeof(header), &cursor) == FR_OK){
+					HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
+				}
+				f_close(&logFile);
+			}
+			else{
+				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+			}
 		}
 	}
 	
-<<<<<<< HEAD
 	if(ACCELERATION_ENABLE){
 		ACC_deactivate(&hi2c3);
 		HAL_Delay(200);
@@ -169,13 +166,6 @@ int main(void)
 	
 	HAL_ADC_Start_DMA(&hadc1, &Temp_Raw, 1);
 	HAL_ADC_Start_IT(&hadc1);
-=======
-	/* Start ADC ---------------------------------------------------------------*/
-	if(TEMP_ENABLE){
-		HAL_ADC_Start_DMA(&hadc1, &Temp_Raw, 1);
-		HAL_ADC_Start_IT(&hadc1);
-	}
->>>>>>> 70ca3aa93a37fd69886c2bc45ad98ccd02cdfd11
 
   /* USER CODE END 2 */
 
@@ -186,7 +176,6 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-<<<<<<< HEAD
 		
 		if(ACCELERATION_ENABLE)
 		{
@@ -221,26 +210,15 @@ int main(void)
 		
 		HAL_ADC_Start_IT(&hadc1);
 		HAL_Delay(100);
-=======
-		if(TEMP_ENABLE){
-			HAL_ADC_Start_IT(&hadc1);
-		}
->>>>>>> 70ca3aa93a37fd69886c2bc45ad98ccd02cdfd11
 		
 		if(LIGHT_ENABLE){
 			if(HAL_GPIO_ReadPin(INT_Photodiode_GPIO_Port, INT_Photodiode_Pin) == 1){
-				HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 			}
 			else{
-				HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
 			}
 		}
-		
-		if(TEMP_ENABLE){
-			sensor_set.temperature = 300 * 2 * Temp_Raw / 4096 - 273;		/* Umrechnung der 12-Bit Rohdaten in °C */
-			Temp = sensor_set.temperature;
-		}
-		HAL_Delay(100);
   }
   /* USER CODE END 3 */
 
@@ -541,15 +519,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	operation_mode = log;
-	if(GPIO_Pin == INT_Photodiode_Pin){
-		event = open_event;
-	}
-	else if(GPIO_Pin == INT_Acceleration_Pin){
-		event = vibration_event;
-	}
-}
 
 
 

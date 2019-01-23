@@ -1,14 +1,19 @@
 #include "acceleration_sensor.h"
 
-// Schreibt Daten an ein Register eines I2C Gerätes
+
+
+/********************************************************************************
+****************** I2C i2c_ *****************************************************
+********************************************************************************/
+
 // HAL_OK, HAL_ERROR, HAL_BUSY, HAL_TIMEOUT -> HAL_StatusTypeDef;
-// 
-HAL_StatusTypeDef i2c_write_register(I2C_HandleTypeDef hi2c3, uint8_t device_slave_adress, uint8_t register_pointer 
+// Schreibt Daten an ein Register eines I2C Gerätes
+HAL_StatusTypeDef i2c_write_register(I2C_HandleTypeDef *i2cHandler, uint8_t device_slave_adress, uint8_t register_pointer 
 																		,uint16_t register_data_to_write, uint16_t number_bytes_to_write)
 {
     HAL_StatusTypeDef status = HAL_OK;
 
-    status = HAL_I2C_Mem_Write(&hi2c3, device_slave_adress, (uint16_t)register_pointer, I2C_MEMADD_SIZE_8BIT 
+    status = HAL_I2C_Mem_Write(i2cHandler, device_slave_adress, (uint16_t)register_pointer, I2C_MEMADD_SIZE_8BIT 
 															,(uint8_t*)(&register_data_to_write), number_bytes_to_write, 100); 
 
     /* Check the communication status */
@@ -20,14 +25,14 @@ HAL_StatusTypeDef i2c_write_register(I2C_HandleTypeDef hi2c3, uint8_t device_sla
 }
 
 // beliebiges Register lesen. 
-HAL_StatusTypeDef i2c_read_register(I2C_HandleTypeDef hi2c3,uint8_t device_slave_adress, uint8_t register_pointer
+HAL_StatusTypeDef i2c_read_register(I2C_HandleTypeDef *i2cHandler,uint8_t device_slave_adress, uint8_t register_pointer
 																		,uint8_t *register_data_read_buffer, uint8_t number_bytes_to_read)
 {
 	HAL_StatusTypeDef status = HAL_OK;
 	
-	status = HAL_I2C_Mem_Read(&hi2c3, device_slave_adress, (uint16_t)register_pointer, 
+	status = HAL_I2C_Mem_Read(i2cHandler, device_slave_adress, (uint16_t)register_pointer, 
 														I2C_MEMADD_SIZE_8BIT, (uint8_t*) register_data_read_buffer, 
-														number_bytes_to_read, 200);
+														number_bytes_to_read, 100);
 	/* Check the communication status */
 	if(status != HAL_OK)
 	{
@@ -36,13 +41,43 @@ HAL_StatusTypeDef i2c_read_register(I2C_HandleTypeDef hi2c3,uint8_t device_slave
 	return status;
 }
 
+/********************************************************************************
+****************** GPS/GNSS Modul GPS_ ******************************************
+********************************************************************************/
+
+
+
+/********************************************************************************
+****************** ACCELEROMETER ACC_ *******************************************
+********************************************************************************/
+/*
+Info wie ACCELEROMETER bestimmte ControlRegister geändert werden müsssen:
+	- in Standby wechseln CTRL_REG1 &= ~(ACTIVE_BIT) 
+	- Ändern
+	- wieder in Active Mode CTRL_REG1 |= ACTIVE_BIT
+*/
+
+HAL_StatusTypeDef ACC_activate(I2C_HandleTypeDef *i2cHandler)
+{
+	// better version would be first read actual Value - modify - write
+	//Schreibe SleepRate50Hz(00), DataRate50Hz(100), NO_lowNoise(0), NO_fastread(0), Activ(1) = 0010 0001 = 0x21
+	return i2c_write_register(i2cHandler, ACCELEROMETER_I2C_ADRESS, ACC_CTRL_REG1, 0x21, 1);
+}
+
+HAL_StatusTypeDef ACC_deactivate(I2C_HandleTypeDef *i2cHandler)
+{
+	// better version would be first read actual Value - modify - write
+	//Schreibe SleepRate50Hz(00), DataRate50Hz(100), NO_lowNoise(0), NO_fastread(0), NOT_Activ(0) = 0010 0000 = 0x20
+	return i2c_write_register(i2cHandler, ACCELEROMETER_I2C_ADRESS, ACC_CTRL_REG1, 0x20, 1);
+}
+
 //Accelerometer alle Werte auslesen. Returns HAL_OK when successfull
-HAL_StatusTypeDef getAllAccelerometerValues(I2C_HandleTypeDef hi2c3, s_accelerometerValues *accValues)
+HAL_StatusTypeDef ACC_getAllValues(I2C_HandleTypeDef *i2cHandler, s_accelerometerValues *accValues)
 {
 	HAL_StatusTypeDef status = HAL_OK;
 	int8_t receiveBuffer[6];
 	
-	status = i2c_read_register(hi2c3, ACCELEROMETER_I2C_ADRESS, ACC_OUT_X_MSB, (uint8_t*)&receiveBuffer, 6);
+	status = i2c_read_register(i2cHandler, ACCELEROMETER_I2C_ADRESS, ACC_OUT_X_MSB, (uint8_t*)&receiveBuffer, 6);
 	
 	if (status!=HAL_OK)return status; // bei Fehler Funktion hier mit status Rueckgabe verlassen
 //X_Wert_14_0 = (X_MSB<<5) || (X_LSB>>2)
@@ -57,7 +92,7 @@ HAL_StatusTypeDef getAllAccelerometerValues(I2C_HandleTypeDef hi2c3, s_accelerom
 // Convert Received Data in Acceleration float
 // Pram: breiteInBit ist entweder 8 oder 12bit / messbereich +-2, 4, 8 g
 // für das speichern der Werte wäre uint16_t sinnvoller als float
-float convertAccelToFloat(uint16_t rohDaten, uint8_t breiteInBit, uint8_t messbereich)
+float ACC_convertAccelToFloat(uint16_t rohDaten, uint8_t breiteInBit, uint8_t messbereich)
 {
 	// 0111 1111 1111 = +1.999 / 3.998 / 7.996
 	// 0000 0000 0001 = 0.001 / 0.002 / 0.004

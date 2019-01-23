@@ -79,6 +79,7 @@ UINT cursor;
 char logFileName[] = "Log2.csv";
 char header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Note\n";
 uint32_t Temp_Raw;
+uint16_t Temp;
 dataset sensor_set;
 /* USER CODE END PV */
 
@@ -138,12 +139,10 @@ int main(void)
 	/* Prepare SD-Card ---------------------------------------------------------*/
 	if(SDIO_ENABLE){
 		if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
-			if(write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor) != FR_OK){
-				HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
-			}
+			write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor);
 		}
 		else{
-			HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 		}
 	}
 	
@@ -168,13 +167,17 @@ int main(void)
 		
 		if(LIGHT_ENABLE){
 			if(HAL_GPIO_ReadPin(INT_Photodiode_GPIO_Port, INT_Photodiode_Pin) == 1){
-				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
 			}
 			else{
-				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_RESET);
 			}
 		}
 		
+		if(TEMP_ENABLE){
+			sensor_set.temperature = 300 * 2 * Temp_Raw / 4096 - 273;		/* Umrechnung der 12-Bit Rohdaten in °C */
+			Temp = sensor_set.temperature;
+		}
 		HAL_Delay(100);
   }
   /* USER CODE END 3 */

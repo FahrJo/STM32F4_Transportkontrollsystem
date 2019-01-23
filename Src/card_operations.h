@@ -12,7 +12,7 @@ typedef struct {
 	struct tm timestamp;									/* Timestamp of the dataset (from GNSS) */
 	char position[25];										/* actual position of the system (from GNSS) */
 	s_accelerometerValues acceleration;		/* actual acceleration of the system (from MEMS) */
-	int8_t temperature;										/* actual temperature (from LM335) */
+	int16_t temperature;										/* actual temperature (from LM335) */
 	char open;														/* is package open (from photo diode) */
 	char notes[25];												/* additional notes (e.g. exceed a limit) */ 
 }dataset;

@@ -10,42 +10,45 @@ BYTE mode = FA_WRITE | FA_CREATE_ALWAYS;
 
 /* Write a string into a file on the SD-Card ---------------------------------*/
 FRESULT write_string_to_file(FIL* logFile_p, const TCHAR* logFileName_p, const void* string_p,	UINT size_of_string, UINT* cursor){
-	return_value = f_open(logFile_p, logFileName_p, mode);
+	HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
 	
+	/* Öffnen und beschreiben der Datei */
+	return_value = f_open(logFile_p, logFileName_p, mode);
 	if(return_value == FR_OK){
-		HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_SET);
-		
 		return_value = f_write(logFile_p, string_p, size_of_string, cursor);
-		if(return_value == FR_OK){
-			HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
-		}
 		f_close(logFile_p);
 	}
-	else{
+	
+	/* Fehler beim schreiben oder öffnen der Datei */
+	if(return_value != FR_OK){
 		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 	}
+	
+	HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_RESET);
 	return return_value;
 }
 
 
 /* Write a full dataset into the logfile on the SD-Card (CSV format) ---------*/
 FRESULT write_dataset_to_file(FIL* logFile_p, const TCHAR* logFileName_p, dataset* dataset_p, UINT* cursor){
+	HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
+	
+	/* Konvertieren des Datensatzes in einen String */
 	convert_dataset_to_string(dataset_p, dataset_string);
 	
+	/* Öffnen und beschreiben der Datei */
 	return_value = f_open(logFile_p, logFileName_p, mode);
-	
 	if(return_value == FR_OK){
-		HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_SET);
-		
 		return_value = f_write(logFile_p, dataset_string, sizeof(dataset_string), cursor);
-		if(return_value == FR_OK){
-			HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
-		}
 		f_close(logFile_p);
 	}
-	else{
+	
+	/* Fehler beim schreiben oder öffnen der Datei */
+	if(return_value != FR_OK){
 		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 	}
+	
+	HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_RESET);
 	return return_value;
 }
 

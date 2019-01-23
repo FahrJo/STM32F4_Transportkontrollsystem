@@ -1,3 +1,6 @@
+#ifndef ACCELERATION_SENSORH
+#define ACCELERATION_SENSORH
+
 #include "stm32f4xx_hal.h"
 #include <stdint.h>
 
@@ -37,9 +40,14 @@ typedef struct {
 	int16_t z_Value;
 }s_accelerometerValues;
 
+
 /* Private function prototypes -----------------------------------------------*/
 HAL_StatusTypeDef i2c_write_register(I2C_HandleTypeDef *hi2c3, uint8_t device_slave_adress, uint8_t register_pointer, uint16_t register_data_to_write, uint16_t number_bytes_to_write);
 HAL_StatusTypeDef i2c_read_register(I2C_HandleTypeDef *hi2c3, uint8_t device_slave_adress, uint8_t register_pointer, uint8_t *register_data_read_buffer, uint8_t number_bytes_to_read);
 HAL_StatusTypeDef ACC_activate(I2C_HandleTypeDef *i2cHandler);
 HAL_StatusTypeDef ACC_deactivate(I2C_HandleTypeDef *i2cHandler);
 HAL_StatusTypeDef ACC_getAllValues(I2C_HandleTypeDef *hi2c3, s_accelerometerValues *accValues);
+
+
+
+#endif

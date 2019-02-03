@@ -55,14 +55,18 @@
 #include "card_operations.h"
 #include "acceleration_Sensor.h"
 
+// Flags für die Aktivierung von Softwarefunktionen
 #define SDIO_ENABLE 					1
 #define ACCELERATION_ENABLE 	1
 #define GNSS_ENABLE 					1
 #define LIGHT_ENABLE 					1
 #define TEMP_ENABLE 					1
 
-#define MAX_TEMP							333		// Temperatur in K, über der ein Interrupt ausgelöst wird
-#define MIN_TEMP							263		// Temperatur in K, unter der ein Interrupt ausgelöst wird
+// Initialisierungswert für das Sammeln eines kompletten Datensatzes
+#define GET_DATA							ACCELERATION_ENABLE + GNSS_ENABLE + LIGHT_ENABLE + TEMP_ENABLE
+
+#define MAX_TEMP							333		// Temperatur in K, UEBER der ein Interrupt ausgelöst wird
+#define MIN_TEMP							263		// Temperatur in K, UNTER der ein Interrupt ausgelöst wird
 
 #define MAX_TEMP_RAW					MAX_TEMP * 4096 / 600
 #define MIN_TEMP_RAW					MIN_TEMP * 4096 / 600
@@ -79,23 +83,29 @@ SD_HandleTypeDef hsd;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-const uint16_t 	datasetCount = 20;
-uint16_t				actualSet = 0;
+const uint16_t 	datasetCount = 20;				// Anzahl der Datensätze, die gesammelt auf die Karte geschrieben werden
+uint16_t				actualSet = 0;						// Momentan aktiver Datensatz
 ADC_AnalogWDGConfTypeDef AnalogWDGConf;
 
 FATFS 					myFatFS;
-FIL 						logFile;
-UINT 						cursor;
+FIL 						logFile;									// Dateihandle auf SD-Karte
+UINT 						cursor;										// Letztes Zeichen in CSV-Datei
 char 						logFileName[] = "Log2.csv";
 char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Note\n";
-uint32_t 				Temp_Raw;
-uint16_t 				Temp;
-dataset 				sensor_set[datasetCount];
-workmode_type 	operation_mode;
-event_type 			event;
+uint32_t 				Temp_Raw;									// Temperatur in 12 Bit aus ADC
+uint16_t 				Temp;											// Temperatur in °C
+dataset 				sensor_set[datasetCount];	// Datensatz, der im RAM gepuffert wird
+workmode_type 	operation_mode = log;			// Betriebsmodus (Energiespar-Funktion)
+event_type 			event;										// Event für die Detektierung einer Grenzwertüberschreitung
 
+/* Trigger-Flags für das Einlesen von Daten */
+char 						getDataset;
 char 						getTemp;
+char 						getLight;
+char 						getAcceleration;
+char 						getPosition;
 char						writeDataset;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -154,7 +164,7 @@ int main(void)
   MX_SDIO_SD_Init();
   /* USER CODE BEGIN 2 */
 	
-	/* Prepare SD-Card ---------------------------------------------------------*/
+	/* Vorbereiten der SD-Karte ------------------------------------------------*/
 	if(SDIO_ENABLE){
 		if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
 			write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor);
@@ -164,7 +174,7 @@ int main(void)
 		}
 	}
 	
-	/* Start ADC ---------------------------------------------------------------*/
+	/* Starte ADC --------------------------------------------------------------*/
 	if(TEMP_ENABLE){
 		HAL_ADC_Start_DMA(&hadc1, &Temp_Raw, 1);
 		HAL_ADC_Start_IT(&hadc1);
@@ -179,29 +189,60 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
+		
+		/* Einlesen der Fotodiode und Ablage in den Datensatz --------------------*/
 		if(LIGHT_ENABLE){
-			if(HAL_GPIO_ReadPin(INT_Photodiode_GPIO_Port, INT_Photodiode_Pin) == 1){
-				HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
-				sensor_set[actualSet].open = 1;
-			}
-			else{
-				HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_RESET);
-				sensor_set[actualSet].open = 0;
+			if(getLight | getDataset){
+				getLight = 0;
+				getDataset--;
+				
+				if(HAL_GPIO_ReadPin(INT_Photodiode_GPIO_Port, INT_Photodiode_Pin) == 1){
+					HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
+					sensor_set[actualSet].open = 1;
+				}
+				else{
+					HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_RESET);
+					sensor_set[actualSet].open = 0;
+				}
 			}
 		}
 		
+		/* Einlesen der Temperatur und Ablage in den Datensatz -------------------*/
 		if(TEMP_ENABLE){
 			HAL_ADC_Start_IT(&hadc1);
 			
-			if(getTemp){
+			if(getTemp | getDataset){
 				getTemp = 0;
+				getDataset--;
+				
 				sensor_set[actualSet].temperature = 300 * 2 * Temp_Raw / 4096 - 273;		/* Umrechnung der 12-Bit Rohdaten in °C */
 				Temp = sensor_set[actualSet].temperature;
 			}
 		}
 		
+		/* Einlesen der Beschleunigungsdaten und Ablage in den Datensatz ---------*/
+		if(ACCELERATION_ENABLE){
+			if(getAcceleration | getDataset){
+				getAcceleration = 0;
+				getDataset--;
+				// ...
+			}
+		}
+		
+		/* Einlesen der Positionsdaten und Ablage in den Datensatz ---------------*/
+		if(GNSS_ENABLE){
+			if(getPosition | getDataset){
+				getPosition = 0;
+				getDataset--;
+				// ...
+			}
+		}
+		
+		/* Füllen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
 		if((actualSet == datasetCount - 1) | writeDataset){
-			write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet + 1, &cursor);
+			if(SDIO_ENABLE){
+				write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet + 1, &cursor);
+			}
 			writeDataset = 0;
 			actualSet = 0;
 		}
@@ -540,8 +581,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 void TIM4_IRQHandler(){							// Interrupt Handler (ISR)
 	TIM4->SR &=~ (0x1);
-	HAL_GPIO_TogglePin(LED6_GPIO_Port, LED6_Pin);
-	getTemp = 1;
+	if(operation_mode == log){
+		HAL_GPIO_TogglePin(LED6_GPIO_Port, LED6_Pin);
+		getDataset = GET_DATA;
+	}
 }
 
 void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc){

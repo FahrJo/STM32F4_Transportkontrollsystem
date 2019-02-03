@@ -61,6 +61,12 @@
 #define LIGHT_ENABLE 					1
 #define TEMP_ENABLE 					1
 
+#define MAX_TEMP							333		// Temperatur in K, über der ein Interrupt ausgelöst wird
+#define MIN_TEMP							263		// Temperatur in K, unter der ein Interrupt ausgelöst wird
+
+#define MAX_TEMP_RAW					MAX_TEMP * 4096 / 600
+#define MIN_TEMP_RAW					MIN_TEMP * 4096 / 600
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -73,16 +79,23 @@ SD_HandleTypeDef hsd;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-FATFS myFatFS;
-FIL logFile;
-UINT cursor;
-char logFileName[] = "Log2.csv";
-char header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Note\n";
-uint32_t Temp_Raw;
-uint16_t Temp;
-dataset sensor_set;
-workmode_type operation_mode;
-event_type event;
+const uint16_t 	datasetCount = 20;
+uint16_t				actualSet = 0;
+ADC_AnalogWDGConfTypeDef AnalogWDGConf;
+
+FATFS 					myFatFS;
+FIL 						logFile;
+UINT 						cursor;
+char 						logFileName[] = "Log2.csv";
+char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Note\n";
+uint32_t 				Temp_Raw;
+uint16_t 				Temp;
+dataset 				sensor_set[datasetCount];
+workmode_type 	operation_mode;
+event_type 			event;
+
+char 						getTemp;
+char						writeDataset;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -95,7 +108,8 @@ static void MX_SDIO_SD_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+void Timer4_Init(void);
+void AnalogWDG_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -128,7 +142,9 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
-
+	Timer4_Init();
+	HAL_ADC_AnalogWDGConfig(&hadc1, &AnalogWDGConf);
+	
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
@@ -163,23 +179,36 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-		if(TEMP_ENABLE){
-			HAL_ADC_Start_IT(&hadc1);
-		}
-		
 		if(LIGHT_ENABLE){
 			if(HAL_GPIO_ReadPin(INT_Photodiode_GPIO_Port, INT_Photodiode_Pin) == 1){
 				HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
+				sensor_set[actualSet].open = 1;
 			}
 			else{
 				HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_RESET);
+				sensor_set[actualSet].open = 0;
 			}
 		}
 		
 		if(TEMP_ENABLE){
-			sensor_set.temperature = 300 * 2 * Temp_Raw / 4096 - 273;		/* Umrechnung der 12-Bit Rohdaten in °C */
-			Temp = sensor_set.temperature;
+			HAL_ADC_Start_IT(&hadc1);
+			
+			if(getTemp){
+				getTemp = 0;
+				sensor_set[actualSet].temperature = 300 * 2 * Temp_Raw / 4096 - 273;		/* Umrechnung der 12-Bit Rohdaten in °C */
+				Temp = sensor_set[actualSet].temperature;
+			}
 		}
+		
+		if((actualSet == datasetCount - 1) | writeDataset){
+			write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet + 1, &cursor);
+			writeDataset = 0;
+			actualSet = 0;
+		}
+		else if(actualSet < datasetCount - 1){
+			actualSet++;
+		}
+		
 		HAL_Delay(100);
   }
   /* USER CODE END 3 */
@@ -481,6 +510,24 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void Timer4_Init(void){
+	RCC->APB1ENR |= (1<<2); 					// APB: Advanced Perifery Bridge
+	TIM4->PSC = 4200-1;								// Prescaler für Timer 4
+	TIM4->ARR = 20000-1;							// Autoreload Limit
+	
+	TIM4->DIER |= 0x1;								// Enable Timer 4 for set an Interrupt
+	NVIC_EnableIRQ(TIM4_IRQn);				// Enable Interrupt für Timer 4
+	TIM4->CR1 |= 0x1;									// Konfig-Register für Timer 4 / Channel 1
+}
+
+void AnalogWDG_Init(void){
+	AnalogWDGConf.WatchdogMode = ADC_ANALOGWATCHDOG_ALL_REG;
+	AnalogWDGConf.Channel = ADC_ALL_CHANNELS;
+	AnalogWDGConf.HighThreshold = MAX_TEMP_RAW;
+	AnalogWDGConf.LowThreshold = MIN_TEMP_RAW;
+	AnalogWDGConf.ITMode = ENABLE;
+}
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	operation_mode = log;
 	if(GPIO_Pin == INT_Photodiode_Pin){
@@ -491,7 +538,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	}
 }
 
+void TIM4_IRQHandler(){							// Interrupt Handler (ISR)
+	TIM4->SR &=~ (0x1);
+	HAL_GPIO_TogglePin(LED6_GPIO_Port, LED6_Pin);
+	getTemp = 1;
+}
 
+void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc){
+	operation_mode = log;
+	event = temp_event;
+}
 
 /* USER CODE END 4 */
 

@@ -87,11 +87,13 @@ const uint16_t 	datasetCount = 20;				// Anzahl der Datensätze, die gesammelt au
 uint16_t				actualSet = 0;						// Momentan aktiver Datensatz
 ADC_AnalogWDGConfTypeDef AnalogWDGConf;
 
+struct tm				clock_time;
+
 FATFS 					myFatFS;
 FIL 						logFile;									// Dateihandle auf SD-Karte
 UINT 						cursor;										// Letztes Zeichen in CSV-Datei
-char 						logFileName[] = "Log2.csv";
-char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Note\n";
+char 						logFileName[] = "Log3.csv";
+char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n";
 uint32_t 				Temp_Raw;									// Temperatur in 12 Bit aus ADC
 uint16_t 				Temp;											// Temperatur in °C
 dataset 				sensor_set[datasetCount];	// Datensatz, der im RAM gepuffert wird
@@ -190,67 +192,72 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 		
-		/* Einlesen der Fotodiode und Ablage in den Datensatz --------------------*/
-		if(LIGHT_ENABLE){
-			if(getLight | getDataset){
-				getLight = 0;
-				getDataset--;
-				
-				if(HAL_GPIO_ReadPin(INT_Photodiode_GPIO_Port, INT_Photodiode_Pin) == 1){
-					HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
-					sensor_set[actualSet].open = 1;
-				}
-				else{
-					HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_RESET);
-					sensor_set[actualSet].open = 0;
+		if(getLight | getTemp | getAcceleration | getPosition | getDataset){
+		
+			/* Einlesen der Fotodiode und Ablage in den Datensatz ------------------*/
+			if(LIGHT_ENABLE){
+				if(getLight | getDataset){
+					getLight = 0;
+					getDataset--;
+					
+					if(HAL_GPIO_ReadPin(INT_Photodiode_GPIO_Port, INT_Photodiode_Pin) == 1){
+						HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
+						sensor_set[actualSet].open = 1;
+					}
+					else{
+						HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_RESET);
+						sensor_set[actualSet].open = 0;
+					}
 				}
 			}
-		}
-		
-		/* Einlesen der Temperatur und Ablage in den Datensatz -------------------*/
-		if(TEMP_ENABLE){
-			HAL_ADC_Start_IT(&hadc1);
 			
-			if(getTemp | getDataset){
-				getTemp = 0;
-				getDataset--;
+			/* Einlesen der Temperatur und Ablage in den Datensatz -----------------*/
+			if(TEMP_ENABLE){
+				HAL_ADC_Start_IT(&hadc1);
 				
-				sensor_set[actualSet].temperature = 300 * 2 * Temp_Raw / 4096 - 273;		/* Umrechnung der 12-Bit Rohdaten in °C */
-				Temp = sensor_set[actualSet].temperature;
+				if(getTemp | getDataset){
+					getTemp = 0;
+					getDataset--;
+					
+					sensor_set[actualSet].temperature = 300 * 2 * Temp_Raw / 4096 - 273;		/* Umrechnung der 12-Bit Rohdaten in °C */
+					Temp = sensor_set[actualSet].temperature;
+				}
 			}
+			
+			/* Einlesen der Beschleunigungsdaten und Ablage in den Datensatz -------*/
+			if(ACCELERATION_ENABLE){
+				if(getAcceleration | getDataset){
+					getAcceleration = 0;
+					getDataset--;
+					// ...
+				}
+			}
+			
+			/* Einlesen der Positionsdaten und Ablage in den Datensatz -------------*/
+			if(GNSS_ENABLE){
+				if(getPosition | getDataset){
+					getPosition = 0;
+					getDataset--;
+					// ...
+					sensor_set[actualSet].timestamp = clock_time;
+				}
+			}
+			
+			actualSet++;
 		}
 		
-		/* Einlesen der Beschleunigungsdaten und Ablage in den Datensatz ---------*/
-		if(ACCELERATION_ENABLE){
-			if(getAcceleration | getDataset){
-				getAcceleration = 0;
-				getDataset--;
-				// ...
-			}
-		}
-		
-		/* Einlesen der Positionsdaten und Ablage in den Datensatz ---------------*/
-		if(GNSS_ENABLE){
-			if(getPosition | getDataset){
-				getPosition = 0;
-				getDataset--;
-				// ...
-			}
-		}
+
 		
 		/* Füllen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
-		if((actualSet == datasetCount - 1) | writeDataset){
+		if((actualSet == datasetCount) | writeDataset){
 			if(SDIO_ENABLE){
-				write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet + 1, &cursor);
+				write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet, &cursor);
 			}
 			writeDataset = 0;
 			actualSet = 0;
 		}
-		else if(actualSet < datasetCount - 1){
-			actualSet++;
-		}
 		
-		HAL_Delay(100);
+		//HAL_Delay(100);
   }
   /* USER CODE END 3 */
 
@@ -582,7 +589,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 void TIM4_IRQHandler(){							// Interrupt Handler (ISR)
 	TIM4->SR &=~ (0x1);
 	if(operation_mode == log){
-		HAL_GPIO_TogglePin(LED6_GPIO_Port, LED6_Pin);
+		HAL_GPIO_TogglePin(LED5_GPIO_Port, LED5_Pin);
+		clock_time.tm_sec++;
 		getDataset = GET_DATA;
 	}
 }

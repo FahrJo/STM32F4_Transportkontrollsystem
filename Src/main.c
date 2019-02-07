@@ -6,41 +6,41 @@
   ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2019 STMicroelectronics International N.V. 
+  * Copyright (c) 2019 STMicroelectronics International N.V.
   * All rights reserved.
   *
-  * Redistribution and use in source and binary forms, with or without 
+  * Redistribution and use in source and binary forms, with or without
   * modification, are permitted, provided that the following conditions are met:
   *
-  * 1. Redistribution of source code must retain the above copyright notice, 
+  * 1. Redistribution of source code must retain the above copyright notice,
   *    this list of conditions and the following disclaimer.
   * 2. Redistributions in binary form must reproduce the above copyright notice,
   *    this list of conditions and the following disclaimer in the documentation
   *    and/or other materials provided with the distribution.
-  * 3. Neither the name of STMicroelectronics nor the names of other 
-  *    contributors to this software may be used to endorse or promote products 
+  * 3. Neither the name of STMicroelectronics nor the names of other
+  *    contributors to this software may be used to endorse or promote products
   *    derived from this software without specific written permission.
-  * 4. This software, including modifications and/or derivative works of this 
+  * 4. This software, including modifications and/or derivative works of this
   *    software, must execute solely and exclusively on microcontroller or
   *    microprocessor devices manufactured by or for STMicroelectronics.
-  * 5. Redistribution and use of this software other than as permitted under 
-  *    this license is void and will automatically terminate your rights under 
-  *    this license. 
+  * 5. Redistribution and use of this software other than as permitted under
+  *    this license is void and will automatically terminate your rights under
+  *    this license.
   *
-  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
-  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
-  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT
+  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
   * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
-  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
+  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT
   * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
   * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
   * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
@@ -55,18 +55,18 @@
 #include "card_operations.h"
 #include "acceleration_Sensor.h"
 
-// Flags für die Aktivierung von Softwarefunktionen
-#define SDIO_ENABLE 					1
+#define SDIO_ENABLE 					0
 #define ACCELERATION_ENABLE 	1
-#define GNSS_ENABLE 					1
-#define LIGHT_ENABLE 					1
-#define TEMP_ENABLE 					1
+#define GNSS_ENABLE 					0
+#define LIGHT_ENABLE 					0
+#define TEMP_ENABLE 					0
+#define ACC_MAX_ANZAHL_WERTE 20
 
-// Initialisierungswert für das Sammeln eines kompletten Datensatzes
+// Initialisierungswert fï¿½r das Sammeln eines kompletten Datensatzes
 #define GET_DATA							ACCELERATION_ENABLE + GNSS_ENABLE + LIGHT_ENABLE + TEMP_ENABLE
 
-#define MAX_TEMP							333		// Temperatur in K, ÜBER der ein Interrupt ausgelöst wird
-#define MIN_TEMP							263		// Temperatur in K, UNTER der ein Interrupt ausgelöst wird
+#define MAX_TEMP							333		// Temperatur in K, ï¿½BER der ein Interrupt ausgelï¿½st wird
+#define MIN_TEMP							263		// Temperatur in K, UNTER der ein Interrupt ausgelï¿½st wird
 
 #define MAX_TEMP_RAW					MAX_TEMP * 4096 / 600
 #define MIN_TEMP_RAW					MIN_TEMP * 4096 / 600
@@ -83,9 +83,11 @@ SD_HandleTypeDef hsd;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-const uint16_t 	datasetCount = 20;				// Anzahl der Datensätze, die gesammelt auf die Karte geschrieben werden
+const uint16_t 	datasetCount = 20;				// Anzahl der Datensï¿½tze, die gesammelt auf die Karte geschrieben werden
 uint16_t				actualSet = 0;						// Momentan aktiver Datensatz
 ADC_AnalogWDGConfTypeDef AnalogWDGConf;
+s_accelerometerValues acceleration_actual_global;
+
 
 struct tm				clock_time;
 
@@ -95,12 +97,12 @@ UINT 						cursor;										// Letztes Zeichen in CSV-Datei
 char 						logFileName[] = "Log3.csv";
 char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n";
 uint32_t 				Temp_Raw;									// Temperatur in 12 Bit aus ADC
-uint16_t 				Temp;											// Temperatur in °C
+uint16_t 				Temp;											// Temperatur in ï¿½C
 dataset 				sensor_set[datasetCount];	// Datensatz, der im RAM gepuffert wird
 workmode_type 	operation_mode = log;			// Betriebsmodus (Energiespar-Funktion)
-event_type 			event;										// Event für die Detektierung einer Grenzwertüberschreitung
+event_type 			event;										// Event fï¿½r die Detektierung einer Grenzwertï¿½berschreitung
 
-/* Trigger-Flags für das Einlesen von Daten */
+/* Trigger-Flags fï¿½r das Einlesen von Daten */
 char 						getDataset;
 char 						getTemp;
 char 						getLight;
@@ -136,7 +138,8 @@ void AnalogWDG_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	s_accelerometerValues acceleration_actual;
+	s_accelerometerValues acceleration_ringbuffer[ACC_MAX_ANZAHL_WERTE];
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -165,7 +168,7 @@ int main(void)
   MX_FATFS_Init();
   MX_SDIO_SD_Init();
   /* USER CODE BEGIN 2 */
-	
+
 	/* Vorbereiten der SD-Karte ------------------------------------------------*/
 	if(SDIO_ENABLE){
 		if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
@@ -175,11 +178,19 @@ int main(void)
 			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 		}
 	}
-	
+
 	/* Starte ADC --------------------------------------------------------------*/
 	if(TEMP_ENABLE){
 		HAL_ADC_Start_DMA(&hadc1, &Temp_Raw, 1);
 		HAL_ADC_Start_IT(&hadc1);
+	}
+
+	if(ACCELERATION_ENABLE){
+		ACC_deactivate(&hi2c3);
+		HAL_Delay(200);
+		ACC_activate(&hi2c3);
+		HAL_Delay(200);
+
 	}
 
   /* USER CODE END 2 */
@@ -191,15 +202,15 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-		
+
 		if(getLight | getTemp | getAcceleration | getPosition | getDataset){
-		
+
 			/* Einlesen der Fotodiode und Ablage in den Datensatz ------------------*/
 			if(LIGHT_ENABLE){
 				if(getLight | getDataset){
 					getLight = 0;
 					getDataset--;
-					
+
 					if(HAL_GPIO_ReadPin(INT_Photodiode_GPIO_Port, INT_Photodiode_Pin) == 1){
 						HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
 						sensor_set[actualSet].open = 1;
@@ -210,20 +221,20 @@ int main(void)
 					}
 				}
 			}
-			
+
 			/* Einlesen der Temperatur und Ablage in den Datensatz -----------------*/
 			if(TEMP_ENABLE){
 				HAL_ADC_Start_IT(&hadc1);
-				
+
 				if(getTemp | getDataset){
 					getTemp = 0;
 					getDataset--;
-					
-					sensor_set[actualSet].temperature = 300 * 2 * Temp_Raw / 4096 - 273;		/* Umrechnung der 12-Bit Rohdaten in °C */
+
+					sensor_set[actualSet].temperature = 300 * 2 * Temp_Raw / 4096 - 273;		/* Umrechnung der 12-Bit Rohdaten in ï¿½C */
 					Temp = sensor_set[actualSet].temperature;
 				}
 			}
-			
+
 			/* Einlesen der Beschleunigungsdaten und Ablage in den Datensatz -------*/
 			if(ACCELERATION_ENABLE){
 				if(getAcceleration | getDataset){
@@ -232,7 +243,7 @@ int main(void)
 					// ...
 				}
 			}
-			
+
 			/* Einlesen der Positionsdaten und Ablage in den Datensatz -------------*/
 			if(GNSS_ENABLE){
 				if(getPosition | getDataset){
@@ -243,11 +254,11 @@ int main(void)
 					sensor_set[actualSet].timestamp = clock_time;
 				}
 			}
-			
+
 			actualSet++;
 		}
 		
-		/* Füllen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
+		/* Fï¿½llen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
 		if((actualSet == datasetCount) | writeDataset){
 			if(SDIO_ENABLE){
 				write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet, &cursor);
@@ -255,8 +266,43 @@ int main(void)
 			writeDataset = 0;
 			actualSet = 0;
 		}
-		
-  }
+		HAL_Delay(100);
+
+
+		if(ACCELERATION_ENABLE)
+			{
+			// wenn Button == 1 leuchten alle 4 durchgehend
+			// wenn Lesefehler dann blinken alle 10mal
+			if(HAL_GPIO_ReadPin(User_Button_GPIO_Port, User_Button_Pin) == 1)
+				{
+				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_SET);
+				HAL_Delay(10);
+				}
+				else
+					{
+					HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_RESET);
+					ACC_activate(&hi2c3);
+					HAL_Delay(200);
+					if(HAL_OK != ACC_getAllValues(&hi2c3, &acceleration_actual))
+						{
+						for(int i=0;i<10;i++)
+							{
+							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_SET);
+							HAL_Delay(200);
+							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_RESET);
+							HAL_Delay(200);
+							}
+						}
+						else
+							{
+							acceleration_actual_global = acceleration_actual;
+							HAL_Delay(2000);
+							}
+						HAL_Delay(2000);
+					}
+			}
+		}
+
   /* USER CODE END 3 */
 
 }
@@ -271,13 +317,13 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
 
-    /**Configure the main internal regulator output voltage 
+    /**Configure the main internal regulator output voltage
     */
   __HAL_RCC_PWR_CLK_ENABLE();
 
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -292,7 +338,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -306,11 +352,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time 
+    /**Configure the Systick interrupt time
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick 
+    /**Configure the Systick
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -324,7 +370,7 @@ static void MX_ADC1_Init(void)
 
   ADC_ChannelConfTypeDef sConfig;
 
-    /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
+    /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
     */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
@@ -343,7 +389,7 @@ static void MX_ADC1_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+    /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
     */
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 1;
@@ -389,10 +435,10 @@ static void MX_SDIO_SD_Init(void)
 
 }
 
-/** 
+/**
   * Enable DMA controller clock
   */
-static void MX_DMA_Init(void) 
+static void MX_DMA_Init(void)
 {
   /* DMA controller clock enable */
   __HAL_RCC_DMA2_CLK_ENABLE();
@@ -404,9 +450,9 @@ static void MX_DMA_Init(void)
 
 }
 
-/** Configure pins as 
-        * Analog 
-        * Input 
+/** Configure pins as
+        * Analog
+        * Input
         * Output
         * EVENT_OUT
         * EXTI
@@ -442,7 +488,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(OTG_FS_PowerSwitchOn_GPIO_Port, OTG_FS_PowerSwitchOn_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, LED4_Pin|LED3_Pin|LED5_Pin|LED6_Pin 
+  HAL_GPIO_WritePin(GPIOD, LED4_Pin|LED3_Pin|LED5_Pin|LED6_Pin
                           |Audio_RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : CS_I2C_SPI_Pin */
@@ -509,9 +555,9 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
   HAL_GPIO_Init(CLK_IN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED4_Pin LED3_Pin LED5_Pin LED6_Pin 
+  /*Configure GPIO pins : LED4_Pin LED3_Pin LED5_Pin LED6_Pin
                            Audio_RST_Pin */
-  GPIO_InitStruct.Pin = LED4_Pin|LED3_Pin|LED5_Pin|LED6_Pin 
+  GPIO_InitStruct.Pin = LED4_Pin|LED3_Pin|LED5_Pin|LED6_Pin
                           |Audio_RST_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -558,12 +604,12 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void Timer4_Init(void){
 	RCC->APB1ENR |= (1<<2); 					// APB: Advanced Perifery Bridge
-	TIM4->PSC = 4200-1;								// Prescaler für Timer 4
+	TIM4->PSC = 4200-1;								// Prescaler fï¿½r Timer 4
 	TIM4->ARR = 20000-1;							// Autoreload Limit
-	
+
 	TIM4->DIER |= 0x1;								// Enable Timer 4 for set an Interrupt
-	NVIC_EnableIRQ(TIM4_IRQn);				// Enable Interrupt für Timer 4
-	TIM4->CR1 |= 0x1;									// Konfig-Register für Timer 4 / Channel 1
+	NVIC_EnableIRQ(TIM4_IRQn);				// Enable Interrupt fï¿½r Timer 4
+	TIM4->CR1 |= 0x1;									// Konfig-Register fï¿½r Timer 4 / Channel 1
 }
 
 void AnalogWDG_Init(void){
@@ -628,7 +674,7 @@ void _Error_Handler(char *file, int line)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

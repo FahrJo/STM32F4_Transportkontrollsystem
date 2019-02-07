@@ -65,7 +65,7 @@
 // Initialisierungswert für das Sammeln eines kompletten Datensatzes
 #define GET_DATA							ACCELERATION_ENABLE + GNSS_ENABLE + LIGHT_ENABLE + TEMP_ENABLE
 
-#define MAX_TEMP							333		// Temperatur in K, UEBER der ein Interrupt ausgelöst wird
+#define MAX_TEMP							333		// Temperatur in K, ÜBER der ein Interrupt ausgelöst wird
 #define MIN_TEMP							263		// Temperatur in K, UNTER der ein Interrupt ausgelöst wird
 
 #define MAX_TEMP_RAW					MAX_TEMP * 4096 / 600
@@ -155,7 +155,7 @@ int main(void)
 
   /* USER CODE END SysInit */
 	Timer4_Init();
-	HAL_ADC_AnalogWDGConfig(&hadc1, &AnalogWDGConf);
+	AnalogWDG_Init();
 	
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
@@ -239,14 +239,13 @@ int main(void)
 					getPosition = 0;
 					getDataset--;
 					// ...
+					
 					sensor_set[actualSet].timestamp = clock_time;
 				}
 			}
 			
 			actualSet++;
 		}
-		
-
 		
 		/* Füllen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
 		if((actualSet == datasetCount) | writeDataset){
@@ -257,7 +256,6 @@ int main(void)
 			actualSet = 0;
 		}
 		
-		//HAL_Delay(100);
   }
   /* USER CODE END 3 */
 
@@ -574,6 +572,8 @@ void AnalogWDG_Init(void){
 	AnalogWDGConf.HighThreshold = MAX_TEMP_RAW;
 	AnalogWDGConf.LowThreshold = MIN_TEMP_RAW;
 	AnalogWDGConf.ITMode = ENABLE;
+	
+	HAL_ADC_AnalogWDGConfig(&hadc1, &AnalogWDGConf);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
@@ -589,7 +589,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 void TIM4_IRQHandler(){							// Interrupt Handler (ISR)
 	TIM4->SR &=~ (0x1);
 	if(operation_mode == log){
-		HAL_GPIO_TogglePin(LED5_GPIO_Port, LED5_Pin);
+		//HAL_GPIO_TogglePin(LED5_GPIO_Port, LED5_Pin);
 		clock_time.tm_sec++;
 		getDataset = GET_DATA;
 	}
@@ -598,6 +598,7 @@ void TIM4_IRQHandler(){							// Interrupt Handler (ISR)
 void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc){
 	operation_mode = log;
 	event = temp_event;
+	HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_SET);
 }
 
 /* USER CODE END 4 */

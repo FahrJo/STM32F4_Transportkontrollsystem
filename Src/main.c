@@ -237,6 +237,32 @@ int main(void)
 
 			/* Einlesen der Beschleunigungsdaten und Ablage in den Datensatz -------*/
 			if(ACCELERATION_ENABLE){
+				// wenn Button == 1 leuchten alle 4 durchgehend
+				// wenn Lesefehler dann blinken alle 10mal
+				if(HAL_GPIO_ReadPin(User_Button_GPIO_Port, User_Button_Pin) == 1){
+					HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_SET);
+					HAL_Delay(10);
+				}
+				else{
+					HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_RESET);
+					ACC_activate(&hi2c3);
+					HAL_Delay(200);
+					if(HAL_OK != ACC_getAllValues(&hi2c3, &acceleration_actual)){
+						for(int i=0;i<10;i++){
+							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_SET);
+							HAL_Delay(200);
+							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_RESET);
+							HAL_Delay(200);
+						}
+					}
+					else{
+						acceleration_actual_global = acceleration_actual;
+						HAL_Delay(2000);
+					}
+					HAL_Delay(2000);
+				}
+				
+				
 				if(getAcceleration | getDataset){
 					getAcceleration = 0;
 					getDataset--;
@@ -267,41 +293,6 @@ int main(void)
 			actualSet = 0;
 		}
 		HAL_Delay(100);
-
-
-		if(ACCELERATION_ENABLE)
-			{
-			// wenn Button == 1 leuchten alle 4 durchgehend
-			// wenn Lesefehler dann blinken alle 10mal
-			if(HAL_GPIO_ReadPin(User_Button_GPIO_Port, User_Button_Pin) == 1)
-				{
-				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_SET);
-				HAL_Delay(10);
-				}
-				else
-					{
-					HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_RESET);
-					ACC_activate(&hi2c3);
-					HAL_Delay(200);
-					if(HAL_OK != ACC_getAllValues(&hi2c3, &acceleration_actual))
-						{
-						for(int i=0;i<10;i++)
-							{
-							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_SET);
-							HAL_Delay(200);
-							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin | LED4_Pin | LED5_Pin | LED6_Pin, GPIO_PIN_RESET);
-							HAL_Delay(200);
-							}
-						}
-						else
-							{
-							acceleration_actual_global = acceleration_actual;
-							HAL_Delay(2000);
-							}
-						HAL_Delay(2000);
-					}
-			}
-		}
 
   /* USER CODE END 3 */
 

@@ -86,6 +86,8 @@ SD_HandleTypeDef hsd;
 const uint16_t 	datasetCount = 20;				// Anzahl der Datens�tze, die gesammelt auf die Karte geschrieben werden
 uint16_t				actualSet = 0;						// Momentan aktiver Datensatz
 ADC_AnalogWDGConfTypeDef AnalogWDGConf;
+s_accelerometerValues acceleration_actual_global;
+
 
 struct tm				clock_time;
 

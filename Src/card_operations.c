@@ -66,7 +66,8 @@ void convert_dataset_to_string(dataset* dataset_p, char* dataset_string){
 	strcat(dataset_string, buffer_string);
 	sprintf(buffer_string, "%i;", dataset_p->temperature);
 	strcat(dataset_string, buffer_string);
-	strcat(dataset_string, dataset_p->open != 0 ? "YES;" : "NO;");
+	sprintf(buffer_string, "%i;", dataset_p->open);
+	strcat(dataset_string, buffer_string);
 	strcat(dataset_string, dataset_p->notes);
 	strcat(dataset_string, "\n");
 }

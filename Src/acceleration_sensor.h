@@ -31,7 +31,7 @@ READ ONLY !!!! */
 // for DataRate CTRL_REG1 = xx100xxx (die drei legen fest vonn 000=800Hz bis 111=1,56Hz.  Nicht einfach über einmalig Bitmaske umschaltbar 
 
 // 001110(0/1)+R/W   0011 100x  /bzw/ 0011 101x   0x1C, 0x1D wären die Beiden ohne r/w bit  38 / 3A
-#define ACCELEROMETER_I2C_ADRESS 0x3A
+#define ACCELEROMETER_I2C_ADRESS 0x1C
 
 
 typedef struct {

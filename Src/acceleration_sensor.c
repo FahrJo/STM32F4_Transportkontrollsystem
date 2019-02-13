@@ -1,6 +1,6 @@
 #include "acceleration_sensor.h"
 
-
+//uint8_t ACCELEROMETER_I2C_ADRESS = 0x0;
 
 /********************************************************************************
 ****************** I2C i2c_ *****************************************************
@@ -100,3 +100,11 @@ float ACC_convertAccelToFloat(uint16_t rohDaten, uint8_t breiteInBit, uint8_t me
 	// 1000 0000 0000 = -2 / -4 / -8
 	return 0;
 }
+
+/*void ACC_incrementAdress(void){
+	ACCELEROMETER_I2C_ADRESS++;
+}
+
+void ACC_setAdress(uint8_t adress){
+	ACCELEROMETER_I2C_ADRESS = adress;
+}*/

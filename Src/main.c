@@ -56,11 +56,11 @@
 #include "acceleration_Sensor.h"
 
 // Flags für die Aktivierung von Softwarefunktionen
-#define SDIO_ENABLE 					0
+#define SDIO_ENABLE 					1
 #define ACCELERATION_ENABLE 	1
 #define GNSS_ENABLE 					0
-#define LIGHT_ENABLE 					0
-#define TEMP_ENABLE 					0
+#define LIGHT_ENABLE 					1
+#define TEMP_ENABLE 					1
 #define ACC_MAX_ANZAHL_WERTE 20
 
 // Initialisierungswert für das Sammeln eines kompletten Datensatzes
@@ -100,8 +100,7 @@ uint16_t 				Temp;											// Temperatur in °C
 dataset 				sensor_set[datasetCount];	// Datensatz, der im RAM gepuffert wird
 workmode_type 	operation_mode = log;			// Betriebsmodus (Energiespar-Funktion)
 event_type 			event;										// Event für die Detektierung einer Grenzwertüberschreitung
-uint8_t	 				adress[] = {0x1C, 0x1D, 0x38, 0x3A};
-uint8_t					adressCounter;
+
 s_accelerometerValues acceleration_actual_global;
 
 
@@ -243,40 +242,24 @@ int main(void)
 			/* Einlesen der Beschleunigungsdaten und Ablage in den Datensatz -------*/
 			if(ACCELERATION_ENABLE){
 				
-
-				i2c_status = ACC_getAllValues(&hi2c3, &acceleration_actual);
-				if(i2c_status == HAL_OK){
-					HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
-				}
-				
-				// wenn Lesefehler dann blinken alle 5 mal
-				//HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
-				/*while(i2c_status != HAL_OK){
-					adressCounter = (adressCounter < 4) ? adressCounter + 1 : 0;
-					ACC_setAdress(adress[adressCounter]);
-					i2c_status = ACC_activate(&hi2c3);
-					HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin);
-					HAL_Delay(10);
-				}*/
-				/*if(HAL_OK != ACC_getAllValues(&hi2c3, &acceleration_actual)){
-					for(int i=0;i<5;i++){
-						HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-						HAL_Delay(200);
-						HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
-						HAL_Delay(200);
-					}
-				}
-				else{
-					acceleration_actual_global = acceleration_actual;
-					HAL_Delay(200);
-				}*/
-				HAL_Delay(200);
-			
-				
 				if(getAcceleration | getDataset){
 					getAcceleration = 0;
 					getDataset--;
-					// ...
+					
+					i2c_status = ACC_getAllValues(&hi2c3, &acceleration_actual);
+					if(i2c_status == HAL_OK){
+						//HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
+						sensor_set[actualSet].acceleration = acceleration_actual;
+					}
+					// wenn Lesefehler dann blinken alle 5 mal
+					else{
+						for(int i=0;i<5;i++){
+							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+							HAL_Delay(200);
+							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+							HAL_Delay(200);
+						}
+					}
 				}
 			}
 			

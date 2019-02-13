@@ -1,6 +1,8 @@
 #include "acceleration_sensor.h"
 
 //uint8_t ACCELEROMETER_I2C_ADRESS = 0x0;
+uint8_t	 	adress[] = {0x1C, 0x1D, 0x38, 0x3A};
+uint8_t		adressCounter;
 
 /********************************************************************************
 ****************** I2C i2c_ *****************************************************
@@ -107,4 +109,15 @@ float ACC_convertAccelToFloat(uint16_t rohDaten, uint8_t breiteInBit, uint8_t me
 
 void ACC_setAdress(uint8_t adress){
 	ACCELEROMETER_I2C_ADRESS = adress;
+}*/
+
+/*uint8_t ACC_Search(I2C_HandleTypeDef *i2cHandler){
+	while(ACC_activate(&i2cHandler) != HAL_OK){
+		adressCounter = (adressCounter < 4) ? adressCounter + 1 : 0;
+		ACC_setAdress(adress[adressCounter]);
+		i2c_status = ACC_activate(&i2cHandler);
+		HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin);
+		HAL_Delay(10);
+	}
+	return adress[adressCounter];
 }*/

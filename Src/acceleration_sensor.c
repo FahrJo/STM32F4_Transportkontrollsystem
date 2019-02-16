@@ -82,11 +82,11 @@ HAL_StatusTypeDef ACC_getAllValues(I2C_HandleTypeDef *i2cHandler, s_acceleromete
 	status = i2c_read_register(i2cHandler, ACCELEROMETER_I2C_ADRESS, ACC_OUT_X_MSB, (uint8_t*)&receiveBuffer, 6);
 	
 	if (status!=HAL_OK)return status; // bei Fehler Funktion hier mit status Rueckgabe verlassen
-//X_Wert_14_0 = (X_MSB<<5) || (X_LSB>>2)
-//bei Fehlerhaften Werten, evtl vor "<<" typecast auf int16 
-	accValues->x_Value = receiveBuffer[0]<<5 || receiveBuffer[1]>>2;
-	accValues->y_Value = receiveBuffer[2]<<5 || receiveBuffer[3]>>2;
-	accValues->z_Value = receiveBuffer[4]<<5 || receiveBuffer[5]>>2;
+	//X_Wert_14_0 = (X_MSB<<5) || (X_LSB>>2)
+	//bei Fehlerhaften Werten, evtl vor "<<" typecast auf int16 
+	accValues->x_Value = receiveBuffer[0]<<5 | receiveBuffer[1]>>2;
+	accValues->y_Value = receiveBuffer[2]<<5 | receiveBuffer[3]>>2;
+	accValues->z_Value = receiveBuffer[4]<<5 | receiveBuffer[5]>>2;
 
 	return	HAL_OK;
 }

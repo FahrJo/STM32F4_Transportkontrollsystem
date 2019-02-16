@@ -58,7 +58,7 @@
 // Flags für die Aktivierung von Softwarefunktionen
 #define SDIO_ENABLE 					1
 #define ACCELERATION_ENABLE 	1
-#define GNSS_ENABLE 					0
+#define GNSS_ENABLE 					1
 #define LIGHT_ENABLE 					1
 #define TEMP_ENABLE 					1
 #define ACC_MAX_ANZAHL_WERTE 20
@@ -248,18 +248,18 @@ int main(void)
 					
 					i2c_status = ACC_getAllValues(&hi2c3, &acceleration_actual);
 					if(i2c_status == HAL_OK){
-						//HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
+						HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
 						sensor_set[actualSet].acceleration = acceleration_actual;
 					}
 					// wenn Lesefehler dann blinken alle 5 mal
-					else{
+					/*else{
 						for(int i=0;i<5;i++){
 							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 							HAL_Delay(200);
 							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
 							HAL_Delay(200);
 						}
-					}
+					}*/
 				}
 			}
 			
@@ -280,11 +280,13 @@ int main(void)
 		
 		/* Füllen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
 		if((actualSet == datasetCount) | writeDataset){
+			HAL_NVIC_DisableIRQ(TIM4_IRQn);
 			if(SDIO_ENABLE){
 				write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet, &cursor);
 			}
 			writeDataset = 0;
 			actualSet = 0;
+			HAL_NVIC_EnableIRQ(TIM4_IRQn);
 		}
 		
 		//HAL_Delay(100);

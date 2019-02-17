@@ -100,7 +100,11 @@ float ACC_convertAccelToFloat(uint16_t rohDaten, uint8_t breiteInBit, uint8_t me
 	// 0000 0000 0001 = 0.001 / 0.002 / 0.004
 	// 1111 1111 1111 = -0.001 / -0.002 / -0.004
 	// 1000 0000 0000 = -2 / -4 / -8
-	return 0;
+	float accelerationFloat;
+	
+	accelerationFloat = (rohDaten * 2 * messbereich) / (1<<breiteInBit) - messbereich; //TODO???????
+	
+	return accelerationFloat;
 }
 
 /*void ACC_incrementAdress(void){

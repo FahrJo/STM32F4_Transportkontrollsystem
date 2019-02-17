@@ -101,7 +101,8 @@ dataset 				sensor_set[datasetCount];	// Datensatz, der im RAM gepuffert wird
 workmode_type 	operation_mode = log;			// Betriebsmodus (Energiespar-Funktion)
 event_type 			event;										// Event für die Detektierung einer Grenzwertüberschreitung
 
-s_accelerometerValues acceleration_actual_global;
+s_accelerometerValues 			acceleration_actual_global;
+s_accelerometerValuesFloat 	acceleration_actual_float;
 
 
 /* Trigger-Flags für das Einlesen von Daten */
@@ -249,6 +250,9 @@ int main(void)
 					i2c_status = ACC_getAllValues(&hi2c3, &acceleration_actual);
 					if(i2c_status == HAL_OK){
 						HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
+						acceleration_actual_float.x_Value = ACC_convertAccelToFloat(acceleration_actual.x_Value, 8, 2);
+						acceleration_actual_float.y_Value = ACC_convertAccelToFloat(acceleration_actual.y_Value, 8, 2);
+						acceleration_actual_float.z_Value = ACC_convertAccelToFloat(acceleration_actual.z_Value, 8, 2);
 						sensor_set[actualSet].acceleration = acceleration_actual;
 					}
 					// wenn Lesefehler dann blinken alle 5 mal

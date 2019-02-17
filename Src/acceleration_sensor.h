@@ -41,6 +41,12 @@ typedef struct {
 	int16_t z_Value;
 }s_accelerometerValues;
 
+typedef struct {
+	int16_t x_Value;
+	int16_t y_Value;
+	int16_t z_Value;
+}s_accelerometerValuesFloat;
+
 
 /* Private function prototypes -----------------------------------------------*/
 HAL_StatusTypeDef i2c_write_register(I2C_HandleTypeDef *hi2c3, uint8_t device_slave_adress, uint8_t register_pointer, uint16_t register_data_to_write, uint16_t number_bytes_to_write);
@@ -48,6 +54,8 @@ HAL_StatusTypeDef i2c_read_register(I2C_HandleTypeDef *hi2c3, uint8_t device_sla
 HAL_StatusTypeDef ACC_activate(I2C_HandleTypeDef *i2cHandler);
 HAL_StatusTypeDef ACC_deactivate(I2C_HandleTypeDef *i2cHandler);
 HAL_StatusTypeDef ACC_getAllValues(I2C_HandleTypeDef *hi2c3, s_accelerometerValues *accValues);
+
+float ACC_convertAccelToFloat(uint16_t rohDaten, uint8_t breiteInBit, uint8_t messbereich);
 
 void ACC_incrementAdress(void);
 void ACC_setAdress(uint8_t);

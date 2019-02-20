@@ -250,20 +250,20 @@ int main(void)
 					i2c_status = ACC_getAllValues(&hi2c3, &acceleration_actual);
 					if(i2c_status == HAL_OK){
 						HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
-						acceleration_actual_float.x_Value = ACC_convertAccelToFloat(acceleration_actual.x_Value, 8, 2);
-						acceleration_actual_float.y_Value = ACC_convertAccelToFloat(acceleration_actual.y_Value, 8, 2);
-						acceleration_actual_float.z_Value = ACC_convertAccelToFloat(acceleration_actual.z_Value, 8, 2);
+//						acceleration_actual_float.x_Value = ACC_convertAccelToFloat(acceleration_actual.x_Value, 12, 2);
+//						acceleration_actual_float.y_Value = ACC_convertAccelToFloat(acceleration_actual.y_Value, 12, 2);
+//						acceleration_actual_float.z_Value = ACC_convertAccelToFloat(acceleration_actual.z_Value, 12, 2);
 						sensor_set[actualSet].acceleration = acceleration_actual;
 					}
-					// wenn Lesefehler dann blinken alle 5 mal
-					/*else{
-						for(int i=0;i<5;i++){
+					// wenn Lesefehler dann blinken alle 3 mal
+					else{
+						for(int i=0;i<3;i++){
 							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 							HAL_Delay(200);
 							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
 							HAL_Delay(200);
 						}
-					}*/
+					}
 				}
 			}
 			

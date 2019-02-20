@@ -84,9 +84,9 @@ HAL_StatusTypeDef ACC_getAllValues(I2C_HandleTypeDef *i2cHandler, s_acceleromete
 	if (status!=HAL_OK)return status; // bei Fehler Funktion hier mit status Rueckgabe verlassen
 	//X_Wert_14_0 = (X_MSB<<5) || (X_LSB>>2)
 	//bei Fehlerhaften Werten, evtl vor "<<" typecast auf int16 
-	accValues->x_Value = receiveBuffer[0]<<5 | receiveBuffer[1]>>2;
-	accValues->y_Value = receiveBuffer[2]<<5 | receiveBuffer[3]>>2;
-	accValues->z_Value = receiveBuffer[4]<<5 | receiveBuffer[5]>>2;
+	accValues->x_Value = (((int16_t)receiveBuffer[0])<<8 | receiveBuffer[1])>>4;
+	accValues->y_Value = (((int16_t)receiveBuffer[2])<<8 | receiveBuffer[3])>>4;
+	accValues->z_Value = (((int16_t)receiveBuffer[4])<<8 | receiveBuffer[5])>>4;
 
 	return	HAL_OK;
 }
@@ -94,7 +94,7 @@ HAL_StatusTypeDef ACC_getAllValues(I2C_HandleTypeDef *i2cHandler, s_acceleromete
 // Convert Received Data in Acceleration float
 // Pram: breiteInBit ist entweder 8 oder 12bit / messbereich +-2, 4, 8 g
 // für das speichern der Werte wäre uint16_t sinnvoller als float
-float ACC_convertAccelToFloat(uint16_t rohDaten, uint8_t breiteInBit, uint8_t messbereich)
+float ACC_convertAccelToFloat(int16_t rohDaten, uint8_t breiteInBit, uint8_t messbereich)
 {
 	// 0111 1111 1111 = +1.999 / 3.998 / 7.996
 	// 0000 0000 0001 = 0.001 / 0.002 / 0.004
@@ -102,7 +102,7 @@ float ACC_convertAccelToFloat(uint16_t rohDaten, uint8_t breiteInBit, uint8_t me
 	// 1000 0000 0000 = -2 / -4 / -8
 	float accelerationFloat;
 	
-	accelerationFloat = (rohDaten * 2 * messbereich) / (1<<breiteInBit) - messbereich; //TODO???????
+	accelerationFloat = (rohDaten * messbereich) / (float)(1<<(breiteInBit-1)); //TODO???????
 	
 	return accelerationFloat;
 }

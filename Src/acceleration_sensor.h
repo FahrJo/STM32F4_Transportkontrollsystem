@@ -42,9 +42,9 @@ typedef struct {
 }s_accelerometerValues;
 
 typedef struct {
-	int16_t x_Value;
-	int16_t y_Value;
-	int16_t z_Value;
+	float x_Value;
+	float y_Value;
+	float z_Value;
 }s_accelerometerValuesFloat;
 
 
@@ -55,7 +55,7 @@ HAL_StatusTypeDef ACC_activate(I2C_HandleTypeDef *i2cHandler);
 HAL_StatusTypeDef ACC_deactivate(I2C_HandleTypeDef *i2cHandler);
 HAL_StatusTypeDef ACC_getAllValues(I2C_HandleTypeDef *hi2c3, s_accelerometerValues *accValues);
 
-float ACC_convertAccelToFloat(uint16_t rohDaten, uint8_t breiteInBit, uint8_t messbereich);
+float ACC_convertAccelToFloat(int16_t rohDaten, uint8_t breiteInBit, uint8_t messbereich);
 
 void ACC_incrementAdress(void);
 void ACC_setAdress(uint8_t);

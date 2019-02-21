@@ -84,9 +84,26 @@ HAL_StatusTypeDef ACC_getAllValues(I2C_HandleTypeDef *i2cHandler, s_acceleromete
 	if (status!=HAL_OK)return status; // bei Fehler Funktion hier mit status Rueckgabe verlassen
 	//X_Wert_14_0 = (X_MSB<<5) || (X_LSB>>2)
 	//bei Fehlerhaften Werten, evtl vor "<<" typecast auf int16 
-	accValues->x_Value = (((int16_t)receiveBuffer[0])<<8 | receiveBuffer[1])>>4;
-	accValues->y_Value = (((int16_t)receiveBuffer[2])<<8 | receiveBuffer[3])>>4;
-	accValues->z_Value = (((int16_t)receiveBuffer[4])<<8 | receiveBuffer[5])>>4;
+	accValues->x_Value = 0;
+	accValues->y_Value = 0;
+	accValues->z_Value = 0;
+	
+	int8_t zwischenbuffer_byte[6];
+	int16_t* zwischenbuffer = (int16_t*)zwischenbuffer_byte;
+	
+	zwischenbuffer_byte[0] = receiveBuffer[1];
+	zwischenbuffer_byte[1] = receiveBuffer[0];
+	zwischenbuffer_byte[2] = receiveBuffer[3];
+	zwischenbuffer_byte[3] = receiveBuffer[2];
+	zwischenbuffer_byte[4] = receiveBuffer[5];
+	zwischenbuffer_byte[5] = receiveBuffer[4];
+	
+	accValues->x_Value = zwischenbuffer[0] / 16;
+	accValues->y_Value = zwischenbuffer[1] / 16;
+	accValues->z_Value = zwischenbuffer[2] / 16;
+	//accValues->x_Value = (receiveBuffer[0]<<8 | receiveBuffer[1]) / 16;
+	//accValues->y_Value = (receiveBuffer[2]<<8 | receiveBuffer[3]) / 16;
+	//accValues->z_Value = (receiveBuffer[4]<<8 | receiveBuffer[5]) / 16;
 
 	return	HAL_OK;
 }

@@ -75,6 +75,7 @@
 #define PDM_OUT_GPIO_Port GPIOC
 #define User_Button_Pin GPIO_PIN_0
 #define User_Button_GPIO_Port GPIOA
+#define User_Button_EXTI_IRQn EXTI0_IRQn
 #define ADC_Temp_Pin GPIO_PIN_1
 #define ADC_Temp_GPIO_Port GPIOA
 #define INT_Photodiode_Pin GPIO_PIN_2
@@ -127,6 +128,9 @@
 #define SWO_GPIO_Port GPIOB
 #define Audio_SCL_Pin GPIO_PIN_6
 #define Audio_SCL_GPIO_Port GPIOB
+#define INT_Acceleration2_Pin GPIO_PIN_1
+#define INT_Acceleration2_GPIO_Port GPIOE
+#define INT_Acceleration2_EXTI_IRQn EXTI1_IRQn
 
 /* ########################## Assert Selection ############################## */
 /**
@@ -144,9 +148,11 @@ typedef enum {
 } workmode_type;
 
 typedef enum {
-	open_event = 0,
+	no_event = 0,
+	open_event,
 	vibration_event,
-	temp_event
+	temp_event,
+	eject_card
 } event_type;
 	
 	 

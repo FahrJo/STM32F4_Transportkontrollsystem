@@ -13,17 +13,21 @@ uint8_t		adressCounter;
 HAL_StatusTypeDef i2c_write_register(I2C_HandleTypeDef *i2cHandler, uint8_t device_slave_adress, uint8_t register_pointer 
 																		,uint16_t register_data_to_write, uint16_t number_bytes_to_write)
 {
-    HAL_StatusTypeDef status = HAL_OK;
+	HAL_StatusTypeDef status = HAL_OK;
+	HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
 
-    status = HAL_I2C_Mem_Write(i2cHandler, device_slave_adress, (uint16_t)register_pointer, I2C_MEMADD_SIZE_8BIT 
-															,(uint8_t*)(&register_data_to_write), number_bytes_to_write, 100); 
+	status = HAL_I2C_Mem_Write(i2cHandler, device_slave_adress, (uint16_t)register_pointer, I2C_MEMADD_SIZE_8BIT 
+														,(uint8_t*)(&register_data_to_write), number_bytes_to_write, 100); 
 
-    /* Check the communication status */
-    if(status != HAL_OK)
-    {
-        // Error handling, for example re-initialization of the I2C peripheral
-    }
-		return status;
+	/* Check the communication status */
+	if(status != HAL_OK)
+	{
+			// Error handling, for example re-initialization of the I2C peripheral
+	}
+	else{
+		HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_RESET);
+	}
+	return status;
 }
 
 // beliebiges Register lesen. 
@@ -31,6 +35,7 @@ HAL_StatusTypeDef i2c_read_register(I2C_HandleTypeDef *i2cHandler,uint8_t device
 																		,uint8_t *register_data_read_buffer, uint8_t number_bytes_to_read)
 {
 	HAL_StatusTypeDef status = HAL_OK;
+	HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
 	
 	status = HAL_I2C_Mem_Read(i2cHandler, device_slave_adress, (uint16_t)register_pointer, 
 														I2C_MEMADD_SIZE_8BIT, (uint8_t*) register_data_read_buffer, 
@@ -39,6 +44,9 @@ HAL_StatusTypeDef i2c_read_register(I2C_HandleTypeDef *i2cHandler,uint8_t device
 	if(status != HAL_OK)
 	{
 			// Error handling, for example re-initialization of the I2C peripheral
+	}
+	else{
+		HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_RESET);
 	}
 	return status;
 }

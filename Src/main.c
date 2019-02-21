@@ -82,6 +82,8 @@ I2C_HandleTypeDef hi2c3;
 
 SD_HandleTypeDef hsd;
 
+SPI_HandleTypeDef hspi1;
+
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 const uint16_t 	datasetCount = 20;				// Anzahl der Datensätze, die gesammelt auf die Karte geschrieben werden
@@ -122,6 +124,7 @@ static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_I2C3_Init(void);
 static void MX_SDIO_SD_Init(void);
+static void MX_SPI1_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -161,8 +164,7 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
-	
-	
+
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
@@ -170,6 +172,7 @@ int main(void)
   MX_I2C3_Init();
   MX_FATFS_Init();
   MX_SDIO_SD_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 	
 	if(ACCELERATION_ENABLE){
@@ -249,7 +252,6 @@ int main(void)
 					
 					i2c_status = ACC_getAllValues(&hi2c3, &acceleration_actual);
 					if(i2c_status == HAL_OK){
-						HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
 //						acceleration_actual_float.x_Value = ACC_convertAccelToFloat(acceleration_actual.x_Value, 12, 2);
 //						acceleration_actual_float.y_Value = ACC_convertAccelToFloat(acceleration_actual.y_Value, 12, 2);
 //						acceleration_actual_float.z_Value = ACC_convertAccelToFloat(acceleration_actual.z_Value, 12, 2);
@@ -283,14 +285,20 @@ int main(void)
 
 		
 		/* Füllen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
-		if((actualSet == datasetCount) | writeDataset){
+		if((actualSet == datasetCount) | writeDataset | (event == eject_card)){
 			HAL_NVIC_DisableIRQ(TIM4_IRQn);
 			if(SDIO_ENABLE){
 				write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet, &cursor);
 			}
 			writeDataset = 0;
 			actualSet = 0;
-			HAL_NVIC_EnableIRQ(TIM4_IRQn);
+			if(event == eject_card){
+				HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
+				event = no_event;
+			}
+			else{
+				HAL_NVIC_EnableIRQ(TIM4_IRQn);
+			}
 		}
 		
 		//HAL_Delay(100);
@@ -427,6 +435,30 @@ static void MX_SDIO_SD_Init(void)
 
 }
 
+/* SPI1 init function */
+static void MX_SPI1_Init(void)
+{
+
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 /** 
   * Enable DMA controller clock
   */
@@ -450,9 +482,6 @@ static void MX_DMA_Init(void)
         * EXTI
      PC3   ------> I2S2_SD
      PA4   ------> I2S3_WS
-     PA5   ------> SPI1_SCK
-     PA6   ------> SPI1_MISO
-     PA7   ------> SPI1_MOSI
      PB10   ------> I2S2_CK
      PA9   ------> USB_OTG_FS_VBUS
      PA10   ------> USB_OTG_FS_ID
@@ -505,14 +534,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
   HAL_GPIO_Init(PDM_OUT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : User_Button_Pin */
-  GPIO_InitStruct.Pin = User_Button_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(User_Button_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : INT_Photodiode_Pin INT_Acceleration_Pin */
-  GPIO_InitStruct.Pin = INT_Photodiode_Pin|INT_Acceleration_Pin;
+  /*Configure GPIO pins : User_Button_Pin INT_Photodiode_Pin INT_Acceleration_Pin */
+  GPIO_InitStruct.Pin = User_Button_Pin|INT_Photodiode_Pin|INT_Acceleration_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -524,14 +547,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
   HAL_GPIO_Init(I2S3_WS_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : SPI1_SCK_Pin SPI1_MISO_Pin SPI1_MOSI_Pin */
-  GPIO_InitStruct.Pin = SPI1_SCK_Pin|SPI1_MISO_Pin|SPI1_MOSI_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : BOOT1_Pin */
   GPIO_InitStruct.Pin = BOOT1_Pin;
@@ -584,7 +599,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
   HAL_GPIO_Init(Audio_SCL_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : INT_Acceleration2_Pin */
+  GPIO_InitStruct.Pin = INT_Acceleration2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(INT_Acceleration2_GPIO_Port, &GPIO_InitStruct);
+
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
   HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
@@ -616,7 +643,10 @@ void AnalogWDG_Init(void){
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	operation_mode = log;
-	if(GPIO_Pin == INT_Photodiode_Pin){
+	if(GPIO_Pin == User_Button_Pin){
+		event = eject_card;
+	}
+	else if(GPIO_Pin == INT_Photodiode_Pin){
 		event = open_event;
 	}
 	else if(GPIO_Pin == INT_Acceleration_Pin){

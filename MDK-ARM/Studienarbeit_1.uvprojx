@@ -336,7 +336,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Middlewares/Third_Party/FatFs/src;../Drivers/CMSIS/Include;../MDK-ARM</IncludePath>
+              <IncludePath>../Inc; ../Drivers/STM32F4xx_HAL_Driver/Inc; ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy; ../Drivers/CMSIS/Device/ST/STM32F4xx/Include; ../Middlewares/Third_Party/FatFs/src; ../Drivers/CMSIS/Include; ../MDK-ARM</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -391,6 +391,16 @@
           <GroupName>Application/User</GroupName>
           <Files>
             <File>
+              <FileName>card_operations.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\card_operations.c</FilePath>
+            </File>
+            <File>
+              <FileName>acceleration_sensor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\acceleration_sensor.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/main.c</FilePath>
@@ -419,16 +429,6 @@
               <FileName>stm32f4xx_hal_msp.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32f4xx_hal_msp.c</FilePath>
-            </File>
-            <File>
-              <FileName>card_operations.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\card_operations.c</FilePath>
-            </File>
-            <File>
-              <FileName>acceleration_sensor.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\acceleration_sensor.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -464,6 +464,11 @@
               <FileName>stm32f4xx_hal_sd.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sd.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_hal_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c</FilePath>
             </File>
             <File>
               <FileName>stm32f4xx_hal_tim.c</FileName>

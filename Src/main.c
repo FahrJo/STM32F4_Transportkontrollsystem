@@ -55,23 +55,6 @@
 #include "card_operations.h"
 #include "acceleration_Sensor.h"
 
-// Flags für die Aktivierung von Softwarefunktionen
-#define SDIO_ENABLE 					1
-#define ACCELERATION_ENABLE 	1
-#define GNSS_ENABLE 					1
-#define LIGHT_ENABLE 					1
-#define TEMP_ENABLE 					1
-#define ACC_MAX_ANZAHL_WERTE 20
-
-// Initialisierungswert für das Sammeln eines kompletten Datensatzes
-#define GET_DATA							ACCELERATION_ENABLE + GNSS_ENABLE + LIGHT_ENABLE + TEMP_ENABLE
-
-#define MAX_TEMP							333		// Temperatur in K, ÜBER der ein Interrupt ausgelöst wird
-#define MIN_TEMP							263		// Temperatur in K, UNTER der ein Interrupt ausgelöst wird
-
-#define MAX_TEMP_RAW					MAX_TEMP * 4096 / 600
-#define MIN_TEMP_RAW					MIN_TEMP * 4096 / 600
-
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -86,6 +69,25 @@ SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+
+// Flags für die Aktivierung von Softwarefunktionen
+char SDIO_ENABLE 					=	1;
+char ACCELERATION_ENABLE 	=	1;
+char GNSS_ENABLE 					=	1;
+char LIGHT_ENABLE 				=	1;
+char TEMP_ENABLE 					=	1;
+char ACC_MAX_ANZAHL_WERTE =	20;
+
+// Initialisierungswert für das Sammeln eines kompletten Datensatzes
+#define GET_DATA							ACCELERATION_ENABLE + GNSS_ENABLE + LIGHT_ENABLE + TEMP_ENABLE
+
+int MAX_TEMP							= 333;		// Temperatur in K, ÜBER der ein Interrupt ausgelöst wird
+int MIN_TEMP							= 263;		// Temperatur in K, UNTER der ein Interrupt ausgelöst wird
+
+int MAX_TEMP_RAW;
+int MIN_TEMP_RAW;
+
+
 const uint16_t 	datasetCount = 20;				// Anzahl der Datensätze, die gesammelt auf die Karte geschrieben werden
 uint16_t				actualSet = 0;						// Momentan aktiver Datensatz
 ADC_AnalogWDGConfTypeDef AnalogWDGConf;
@@ -94,8 +96,12 @@ struct tm				clock_time;
 
 FATFS 					myFatFS;
 FIL 						logFile;									// Dateihandle auf SD-Karte
+FIL 						configFile;								// Dateihandle auf SD-Karte
 UINT 						cursor;										// Letztes Zeichen in CSV-Datei
+UINT 						configCursor;							// Letztes Zeichen in CSV-Datei
 char 						logFileName[] = "Log3.csv";
+char 						configFileName[] = "config.txt";
+char 						configBuffer[128];
 char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n";
 uint32_t 				Temp_Raw;									// Temperatur in 12 Bit aus ADC
 uint16_t 				Temp;											// Temperatur in °C
@@ -130,6 +136,8 @@ static void MX_SPI1_Init(void);
 /* Private function prototypes -----------------------------------------------*/
 void Timer4_Init(void);
 void AnalogWDG_Init(void);
+void setPreferences(char* buff, UINT buffLength);
+
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -188,6 +196,10 @@ int main(void)
 	/* Vorbereiten der SD-Karte ------------------------------------------------*/
 	if(SDIO_ENABLE){
 		if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
+			if(f_open(&configFile, configFileName, FA_READ | FA_OPEN_EXISTING) == FR_OK){
+				f_read(&configFile, configBuffer, sizeof(configBuffer), &configCursor);
+				//setPreferences(configBuffer, sizeof(configBuffer));
+			}
 			write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor);
 		}
 		else{
@@ -669,6 +681,28 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc){
 	HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_SET);
 }
 
+void setPreferences(char* buff, UINT buffLength){
+	char* token;
+    char* prefBuff;
+    char* trennzeichen = "= ;\n";
+    char* pref[2][16];
+    int   row = 0;
+    prefBuff     = strstr(buff, "enableAcc");
+    token         = strtok(prefBuff, trennzeichen);
+    
+    while(token != NULL && row < 16){
+      pref[0][row] = token;
+      token = strtok(NULL, trennzeichen);
+      pref[1][row] = token;
+      token = strtok(NULL, trennzeichen);
+      printf("%i: pref: %s --> value: %s\n", row, pref[0][row], pref[1][row]);
+      row++;
+    }
+		
+		
+		MAX_TEMP_RAW = MAX_TEMP * 4096 / 600;
+	  MIN_TEMP_RAW = MIN_TEMP * 4096 / 600;
+}
 /* USER CODE END 4 */
 
 /**

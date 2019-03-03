@@ -92,6 +92,9 @@
 #define SPI1_MISO_GPIO_Port GPIOA
 #define SPI1_MOSI_Pin GPIO_PIN_7
 #define SPI1_MOSI_GPIO_Port GPIOA
+#define INT_Acceleration2_Pin GPIO_PIN_4
+#define INT_Acceleration2_GPIO_Port GPIOC
+#define INT_Acceleration2_EXTI_IRQn EXTI4_IRQn
 #define BOOT1_Pin GPIO_PIN_2
 #define BOOT1_GPIO_Port GPIOB
 #define CLK_IN_Pin GPIO_PIN_10
@@ -128,9 +131,6 @@
 #define SWO_GPIO_Port GPIOB
 #define Audio_SCL_Pin GPIO_PIN_6
 #define Audio_SCL_GPIO_Port GPIOB
-#define INT_Acceleration2_Pin GPIO_PIN_1
-#define INT_Acceleration2_GPIO_Port GPIOE
-#define INT_Acceleration2_EXTI_IRQn EXTI1_IRQn
 
 /* ########################## Assert Selection ############################## */
 /**

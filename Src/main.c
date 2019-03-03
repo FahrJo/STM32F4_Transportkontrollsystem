@@ -176,10 +176,11 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	
 	if(ACCELERATION_ENABLE){
+		// Acc-Sensor über I2C deaktivieren und dann wieder aktivieren, damit dieser sicher aktiviert wird
 		ACC_deactivate(&hi2c3);
-		HAL_Delay(20);
+		HAL_Delay(50);
 		ACC_activate(&hi2c3);
-		HAL_Delay(20);
+		HAL_Delay(50);
 	}
 	
 	Timer4_Init();

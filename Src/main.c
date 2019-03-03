@@ -54,7 +54,6 @@
 /* USER CODE BEGIN Includes */
 #include "card_operations.h"
 #include "acceleration_Sensor.h"
-
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -79,7 +78,7 @@ char TEMP_ENABLE 					=	1;
 char ACC_MAX_ANZAHL_WERTE =	20;
 
 // Initialisierungswert für das Sammeln eines kompletten Datensatzes
-#define GET_DATA							ACCELERATION_ENABLE + GNSS_ENABLE + LIGHT_ENABLE + TEMP_ENABLE
+char GET_DATA;
 
 int MAX_TEMP							= 333;		// Temperatur in K, ÜBER der ein Interrupt ausgelöst wird
 int MIN_TEMP							= 263;		// Temperatur in K, UNTER der ein Interrupt ausgelöst wird
@@ -207,6 +206,8 @@ int main(void)
 			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 		}
 	}
+	
+	GET_DATA = ACCELERATION_ENABLE + GNSS_ENABLE + LIGHT_ENABLE + TEMP_ENABLE;
 	
 	/* Starte ADC --------------------------------------------------------------*/
 	if(TEMP_ENABLE){

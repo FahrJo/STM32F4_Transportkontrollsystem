@@ -54,8 +54,46 @@ HAL_StatusTypeDef i2c_read_register(I2C_HandleTypeDef *i2cHandler,uint8_t device
 /********************************************************************************
 ****************** GPS/GNSS Modul GPS_ ******************************************
 ********************************************************************************/
+// zwei Schleifen schachteln. äußere sucht nach "§" und gibt dann jeweilige Stringteil, also eine NMEA Nachricht weiter.
+// innere sucht entsprechend der MessageID nach einem bestimmten Paramter -> Komma zählen
+/* GPS Stuct Entwurf siehe oneNote */
+int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
+{
+		//gpsActualDataset->NMEA_GPGGA[0] != '$'..... strcmp(
+	//if(  )break;
+}
 
-
+int GPS_getVelocity(s_gpsSetOfData* gpsActualDataset) 
+{
+// als INT in ZentiMeter pro Sekunde ( GG.G -> int
+	char cursor=0, i=0;
+	char commaCounter=0;
+	char velocityString[7]; // xxx.x\0 =6
+	while(80 > cursor && gpsActualDataset->NMEA_GPRMC[cursor] != '\0' && gpsActualDataset->NMEA_GPRMC[cursor] != '*'){
+		if(gpsActualDataset->NMEA_GPRMC[cursor] == ','){
+			commaCounter++;
+		}
+		// nach dem 7. Komma steht die Geschwindigkeit
+		if(commaCounter==7){
+			i=0;
+			while(gpsActualDataset->NMEA_GPRMC[cursor+1 + i] != ','){
+				velocityString[i] = gpsActualDataset->NMEA_GPRMC[cursor+1 + i];
+				i++;
+				if(i>6)return -1; // sollte nicht so weit gehen->Fehler
+			}
+			velocityString[i]='\0';
+			
+			// hier jetzt aus eingebundener Lib zu fload oder Int parsen
+			// und funktion retrun richtige Value
+		}
+		cursor++;
+	}
+	
+	
+	return -1; //error
+}
+	
+int GPS_getMovedDistance(s_gpsSetOfData* gpsActualDataset); // in Meter
 
 /********************************************************************************
 ****************** ACCELEROMETER ACC_ *******************************************

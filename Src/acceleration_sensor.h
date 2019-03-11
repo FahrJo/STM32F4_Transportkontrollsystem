@@ -47,6 +47,14 @@ typedef struct {
 	float z_Value;
 }s_accelerometerValuesFloat;
 
+typedef struct {
+	char NMEA_GPRMC[80];
+	char NMEA_GPGGA[80];
+	uint16_t actualPos[2]; //fraglich ob diese mit in die Funktion sollen)
+	uint16_t lastPos[2];
+	char savedToSD;
+}s_gpsSetOfData;
+
 
 /* Private function prototypes -----------------------------------------------*/
 HAL_StatusTypeDef i2c_write_register(I2C_HandleTypeDef *hi2c3, uint8_t device_slave_adress, uint8_t register_pointer, uint16_t register_data_to_write, uint16_t number_bytes_to_write);
@@ -60,5 +68,9 @@ float ACC_convertAccelToFloat(int16_t rohDaten, uint8_t breiteInBit, uint8_t mes
 void ACC_incrementAdress(void);
 void ACC_setAdress(uint8_t);
 
+
+int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString);
+int GPS_getVelocity(s_gpsSetOfData* gpsActualDataset); // als INT in ZentiMeter pro Sekunde ( GG.G -> int
+int GPS_getMovedDistance(s_gpsSetOfData* gpsActualDataset); // in Meter
 
 #endif

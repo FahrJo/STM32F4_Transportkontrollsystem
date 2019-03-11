@@ -184,21 +184,21 @@ int main(void)
 	
 	if(ACCELERATION_ENABLE){
 		// Acc-Sensor über I2C deaktivieren und dann wieder aktivieren, damit dieser sicher aktiviert wird
+		HAL_Delay(5000);
 		ACC_deactivate(&hi2c3);
-		HAL_Delay(50);
+		HAL_Delay(500);
 		ACC_activate(&hi2c3);
-		HAL_Delay(50);
+		HAL_Delay(500);
 	}
 	
-	Timer4_Init();
-	AnalogWDG_Init();
+
 	
 	/* Vorbereiten der SD-Karte ------------------------------------------------*/
 	if(SDIO_ENABLE){
 		if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
 			if(f_open(&configFile, configFileName, FA_READ | FA_OPEN_EXISTING) == FR_OK){
 				f_read(&configFile, configBuffer, sizeof(configBuffer), &configCursor);
-				//setPreferences(configBuffer, sizeof(configBuffer));
+				setPreferences(configBuffer, sizeof(configBuffer));
 			}
 			write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor);
 		}
@@ -206,6 +206,10 @@ int main(void)
 			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 		}
 	}
+	// Remove following line if config file works...
+	setPreferences(configBuffer, sizeof(configBuffer));	
+	Timer4_Init();
+	AnalogWDG_Init();
 	
 	GET_DATA = ACCELERATION_ENABLE + GNSS_ENABLE + LIGHT_ENABLE + TEMP_ENABLE;
 	
@@ -684,6 +688,7 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc){
 }
 
 void setPreferences(char* buff, UINT buffLength){
+	/*
 	char* token;
     char* prefBuff;
     char* trennzeichen = "= ;\n";
@@ -700,6 +705,7 @@ void setPreferences(char* buff, UINT buffLength){
       printf("%i: pref: %s --> value: %s\n", row, pref[0][row], pref[1][row]);
       row++;
     }
+	*/
 		
 		
 		MAX_TEMP_RAW = MAX_TEMP * 4096 / 600;

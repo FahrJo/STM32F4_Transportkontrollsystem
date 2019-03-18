@@ -1,4 +1,5 @@
 #include "acceleration_sensor.h"
+#include "hilfsfunktionen.h"
 
 //uint8_t ACCELEROMETER_I2C_ADRESS = 0x0;
 uint8_t	 	adress[] = {0x1C, 0x1D, 0x38, 0x3A};
@@ -69,6 +70,7 @@ int GPS_getVelocity(s_gpsSetOfData* gpsActualDataset)
 	char cursor=0, i=0;
 	char commaCounter=0;
 	char velocityString[7]; // xxx.x\0 =6
+	uint8_t anzahlStellenGenutzt;
 	while(80 > cursor && gpsActualDataset->NMEA_GPRMC[cursor] != '\0' && gpsActualDataset->NMEA_GPRMC[cursor] != '*'){
 		if(gpsActualDataset->NMEA_GPRMC[cursor] == ','){
 			commaCounter++;
@@ -83,6 +85,7 @@ int GPS_getVelocity(s_gpsSetOfData* gpsActualDataset)
 			}
 			velocityString[i]='\0';
 			
+			return (int)10*myParseFloatNumber(velocityString, &anzahlStellenGenutzt);
 			// hier jetzt aus eingebundener Lib zu fload oder Int parsen
 			// und funktion retrun richtige Value
 		}

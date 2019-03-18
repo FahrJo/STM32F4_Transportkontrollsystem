@@ -105,7 +105,7 @@ char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Ac
 uint32_t 				Temp_Raw;									// Temperatur in 12 Bit aus ADC
 uint16_t 				Temp;											// Temperatur in °C
 dataset 				sensor_set[datasetCount];	// Datensatz, der im RAM gepuffert wird
-workmode_type 	operation_mode = log;			// Betriebsmodus (Energiespar-Funktion)
+workmode_type 	operation_mode = workmode_log;			// Betriebsmodus (Energiespar-Funktion)
 event_type 			event;										// Event für die Detektierung einer Grenzwertüberschreitung
 
 s_accelerometerValues 			acceleration_actual_global;
@@ -660,7 +660,7 @@ void AnalogWDG_Init(void){
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	operation_mode = log;
+	operation_mode = workmode_log;
 	if(GPIO_Pin == User_Button_Pin){
 		event = eject_card;
 	}
@@ -674,7 +674,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 void TIM4_IRQHandler(){							// Interrupt Handler (ISR)
 	TIM4->SR &=~ (0x1);
-	if(operation_mode == log){
+	if(operation_mode == workmode_log){
 		//HAL_GPIO_TogglePin(LED5_GPIO_Port, LED5_Pin);
 		clock_time.tm_sec++;
 		getDataset = GET_DATA;
@@ -682,7 +682,7 @@ void TIM4_IRQHandler(){							// Interrupt Handler (ISR)
 }
 
 void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc){
-	operation_mode = log;
+	operation_mode = workmode_log;
 	event = temp_event;
 	HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_SET);
 }

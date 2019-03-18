@@ -336,7 +336,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;  ../Drivers/STM32F4xx_HAL_Driver/Inc;  ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;  ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;  ../Middlewares/Third_Party/FatFs/src;  ../Drivers/CMSIS/Include;  ../MDK-ARM</IncludePath>
+              <IncludePath>../Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Middlewares/Third_Party/FatFs/src;../Drivers/CMSIS/Include;../MDK-ARM;..\GPS_NMEA_parser-master;..\GPS_NMEA_parser-master\00-GPS_LIBRARY</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -574,6 +574,26 @@
               <FileName>ff_gen_drv.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Middlewares/Third_Party/FatFs/src/ff_gen_drv.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>GPS_Parse</GroupName>
+          <Files>
+            <File>
+              <FileName>buffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\GPS_NMEA_parser-master\00-GPS_LIBRARY\buffer.c</FilePath>
+            </File>
+            <File>
+              <FileName>gps.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\GPS_NMEA_parser-master\00-GPS_LIBRARY\gps.c</FilePath>
+            </File>
+            <File>
+              <FileName>hilfsfunktionen.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\hilfsfunktionen.c</FilePath>
             </File>
           </Files>
         </Group>

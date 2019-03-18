@@ -142,9 +142,9 @@
 /* USER CODE BEGIN Private defines */
 
 typedef enum {
-	sleep = 0,
-	active,
-	log
+	workmode_sleep = 0,
+	workmode_active,
+	workmode_log
 } workmode_type;
 
 typedef enum {

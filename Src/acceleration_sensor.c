@@ -55,6 +55,47 @@ HAL_StatusTypeDef i2c_read_register(I2C_HandleTypeDef *i2cHandler,uint8_t device
 /********************************************************************************
 ****************** GPS/GNSS Modul GPS_ ******************************************
 ********************************************************************************/
+// ueber WakeupPin Status abfragen, Sensor de-/aktiveren und Ergebnis ueberpruefen. 
+// zurueckgeben ob erfolgreich, entsprechend reagieren.
+// returns:  -1 -> Fehler.. nicht erfolgreich
+/*int GPS_activateReceiver(void)
+{
+	//status ueberpruefen, wenn WAKEUP==1, ist es entweder schon An oder es gibt im moment einen 200ms Puls aus. darum 210ms spaeter nochmal schauen
+	if(HAL_GPIO_ReadPin(GPS_WAKEUP_GPIO_PORT, GPS_WAKEUP_PIN)){
+		HAL_Delay(210);
+		if(HAL_GPIO_ReadPin(GPS_WAKEUP_GPIO_PORT, GPS_WAKEUP_PIN)){
+			return 0; //ist bereits an
+		}	// hat puls ausgegeben -> ist noch aus
+	} // dauerhaft 0 -> ist noch aus
+	// anschalten durch 200ms High-Puls auf ON_OFF Pin
+	HAL_GPIO_WritePin(GPS_ON_OFF_GPIO_PORT, GPS_ON_OFF_PIN, GPIO_PIN_SET);
+	HAL_Delay(200);
+	HAL_GPIO_WritePin(GPS_ON_OFF_GPIO_PORT, GPS_ON_OFF_PIN, GPIO_PIN_RESET);
+	HAL_Delay(150); // warten damit Modul auch sicher hochgefahren ist und nicht fehlerhaft ein fehlschlag detectiert wird
+	if(HAL_GPIO_ReadPin(GPS_WAKEUP_GPIO_PORT, GPS_WAKEUP_PIN)) return 1; // erfolgreich aktiviert
+	else return -1; // aktivieren fehlgeschlagen
+}
+
+// optimierungspotential: nebenlaufig umsetzen, bzw die 1s wartezeit rausnehmen und nebenlaufig oder ueber abfrage ob schon schneller aus, ersetzen
+// aktuelle Umsetzung ist aber auf jeden Fall die sicherere Option
+int GPS_deactivateReceiver(void)
+{
+// nach Shutdown initialisierung dauert es maximal 1s bis Spannung weggenommen werden kann.
+	//status ueberpruefen, wenn WAKEUP==0, ist es schon Aus
+	if(0==HAL_GPIO_ReadPin(GPS_WAKEUP_GPIO_PORT, GPS_WAKEUP_PIN)){
+		return 0; //ist bereits aus
+	}	 
+	// ausschalten durch 200ms High-Puls auf ON_OFF Pin
+	HAL_GPIO_WritePin(GPS_ON_OFF_GPIO_PORT, GPS_ON_OFF_PIN, GPIO_PIN_SET);
+	HAL_Delay(200);
+	HAL_GPIO_WritePin(GPS_ON_OFF_GPIO_PORT, GPS_ON_OFF_PIN, GPIO_PIN_RESET);
+	HAL_Delay(1000); // warten damit Modul auch sicher runtergefahren ist und nicht fehlerhaft ein fehlschlag detektiert wird
+	if(0==HAL_GPIO_ReadPin(GPS_WAKEUP_GPIO_PORT, GPS_WAKEUP_PIN)) return 1; // erfolgreich deaktiviert
+	else return -1; // deaktivieren fehlgeschlagen
+}
+*/
+
+
 // zwei Schleifen schachteln. äußere sucht nach "§" und gibt dann jeweilige Stringteil, also eine NMEA Nachricht weiter.
 // innere sucht entsprechend der MessageID nach einem bestimmten Paramter -> Komma zählen
 /* GPS Stuct Entwurf siehe oneNote */

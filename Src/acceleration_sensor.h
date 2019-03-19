@@ -68,7 +68,8 @@ float ACC_convertAccelToFloat(int16_t rohDaten, uint8_t breiteInBit, uint8_t mes
 void ACC_incrementAdress(void);
 void ACC_setAdress(uint8_t);
 
-
+int GPS_activateReceiver(void);
+int GPS_deactivateReceiver(void);
 int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString);
 int GPS_getVelocity(s_gpsSetOfData* gpsActualDataset); // als INT in ZentiMeter pro Sekunde ( GG.G -> int
 int GPS_getMovedDistance(s_gpsSetOfData* gpsActualDataset); // in Meter

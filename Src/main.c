@@ -196,7 +196,7 @@ int main(void)
 		HAL_Delay(500);
 	}
 	
-/*	if(GNSS_ENABLE) {
+	if(GNSS_ENABLE) {
 		GNSS_ENABLE = 0; // erst mal deaktiveren, wenn GPS aktivierung erfolgreich wird es wieder ENABLED
 		// wenn nach 4 Versuchen, das Modul nicht aktivert werden kann, bleibt GNSS_ENABLE=0 und das Programm lauft "normal" weiter
 		for(int i=0;i<4;i++){
@@ -208,7 +208,7 @@ int main(void)
 			HAL_Delay(100);
 		}
 	}
-*/
+
 	
 	/* Vorbereiten der SD-Karte ------------------------------------------------*/
 	if(SDIO_ENABLE){

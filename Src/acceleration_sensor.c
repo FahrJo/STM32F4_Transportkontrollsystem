@@ -98,11 +98,46 @@ int GPS_deactivateReceiver(void)
 
 // zwei Schleifen schachteln. äußere sucht nach "§" und gibt dann jeweilige Stringteil, also eine NMEA Nachricht weiter.
 // innere sucht entsprechend der MessageID nach einem bestimmten Paramter -> Komma zählen
+// oder hier identifiziert Message und speichert sie entsprechend weg
 /* GPS Stuct Entwurf siehe oneNote */
 int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
 {
-		//gpsActualDataset->NMEA_GPGGA[0] != '$'..... strcmp(
-	//if(  )break;
+	char gpsTypFound = 0; // GPRMC (='R') , GPGGA (='G') , other (other)
+	char cursor = 0, copyindex=0;
+	// fehler abfangen falls pNewNmeaString kurzer ist und kein \0 enthält
+	// nach gefunden testen, ob zwischen '$' und '*' <=80 Zeichen 
+	while(80 > cursor && pNewNmeaString[cursor] != '\0' ){
+		if(pNewNmeaString[cursor] == '$'){
+			// NMEA-Sentence Anfang gefunden an stelle cursor
+			if(pNewNmeaString[cursor+1]=='G' && pNewNmeaString[cursor+2]=='P' 
+				&& pNewNmeaString[cursor+3]=='R' && pNewNmeaString[cursor+4]=='M' 
+				&& pNewNmeaString[cursor+5]=='C' && pNewNmeaString[cursor+6]==','){
+					// GPRMC Sentence entdeckt
+					// Datensatz von Null ab füllen, aus Eingangs-String mit offset, wo das $ beginnt ($ mitkopieren)
+					while(80 > copyindex && pNewNmeaString[cursor+copyindex] != '\0' && pNewNmeaString[cursor+copyindex] != '*')	{
+						gpsActualDataset->NMEA_GPRMC[copyindex] = pNewNmeaString[cursor+copyindex];
+						copyindex++;
+					}
+					gpsActualDataset->NMEA_GPRMC[copyindex] = '\0'; // stringende ans Ende
+					return 0; //erfolgreich GPRMC eingelesen
+				}
+			else if(pNewNmeaString[cursor+1]=='G' && pNewNmeaString[cursor+2]=='P' 
+				&& pNewNmeaString[cursor+3]=='G' && pNewNmeaString[cursor+4]=='G' 
+				&& pNewNmeaString[cursor+5]=='A' && pNewNmeaString[cursor+6]==','){
+					// GPGGA Sentence entdeckt
+					// Datensatz von Null ab füllen, aus Eingangs-String mit offset, wo das $ beginnt ($ mitkopieren)
+					while(80 > copyindex && pNewNmeaString[cursor+copyindex] != '\0' && pNewNmeaString[cursor+copyindex] != '*')	{
+						gpsActualDataset->NMEA_GPGGA[copyindex] = pNewNmeaString[cursor+copyindex];
+						copyindex++;
+					}
+					gpsActualDataset->NMEA_GPGGA[copyindex] = '\0'; // stringende ans Ende
+					return 0; //erfolgreich GPGGA eingelesen
+				}
+				else { }; // nichts oder keinen der beiden Sentences gefunden
+		} // ende if der '$' suche
+	} // ende while der '$' suche
+// so kann man schauen, ob in dem Datensatz schon was steht oder noch leer
+//gpsActualDataset->NMEA_GPGGA[0] != '$'..... strcmp(
 }
 
 int GPS_getVelocity(s_gpsSetOfData* gpsActualDataset) 

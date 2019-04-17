@@ -48,8 +48,8 @@ typedef struct {
 }s_accelerometerValuesFloat;
 
 typedef struct {
-	char NMEA_GPRMC[80];
-	char NMEA_GPGGA[80];
+	char NMEA_GPRMC[80]; // $GPRMC,blabli
+	char NMEA_GPGGA[80]; // $GPGGA,blabla
 	uint16_t actualPos[2]; //fraglich ob diese mit in die Funktion sollen)
 	uint16_t lastPos[2];
 	char savedToSD;

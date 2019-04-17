@@ -69,7 +69,7 @@ SPI_HandleTypeDef hspi1;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-// Flags für die Aktivierung von Softwarefunktionen
+// Flags fï¿½r die Aktivierung von Softwarefunktionen
 char SDIO_ENABLE 					=	1;
 char ACCELERATION_ENABLE 	=	1;
 char GNSS_ENABLE 					=	1;
@@ -77,17 +77,17 @@ char LIGHT_ENABLE 				=	1;
 char TEMP_ENABLE 					=	1;
 char ACC_MAX_ANZAHL_WERTE =	20;
 
-// Initialisierungswert für das Sammeln eines kompletten Datensatzes
+// Initialisierungswert fï¿½r das Sammeln eines kompletten Datensatzes
 char GET_DATA;
 
-int MAX_TEMP							= 333;		// Temperatur in K, ÜBER der ein Interrupt ausgelöst wird
-int MIN_TEMP							= 263;		// Temperatur in K, UNTER der ein Interrupt ausgelöst wird
+int MAX_TEMP							= 333;		// Temperatur in K, ï¿½BER der ein Interrupt ausgelï¿½st wird
+int MIN_TEMP							= 263;		// Temperatur in K, UNTER der ein Interrupt ausgelï¿½st wird
 
 int MAX_TEMP_RAW;
 int MIN_TEMP_RAW;
 
 
-const uint16_t 	datasetCount = 20;				// Anzahl der Datensätze, die gesammelt auf die Karte geschrieben werden
+const uint16_t 	datasetCount = 20;				// Anzahl der Datensï¿½tze, die gesammelt auf die Karte geschrieben werden
 uint16_t				actualSet = 0;						// Momentan aktiver Datensatz
 ADC_AnalogWDGConfTypeDef AnalogWDGConf;
 
@@ -103,16 +103,16 @@ char 						configFileName[] = "config.txt";
 char 						configBuffer[128];
 char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n";
 uint32_t 				Temp_Raw;									// Temperatur in 12 Bit aus ADC
-uint16_t 				Temp;											// Temperatur in °C
+uint16_t 				Temp;											// Temperatur in ï¿½C
 dataset 				sensor_set[datasetCount];	// Datensatz, der im RAM gepuffert wird
 workmode_type 	operation_mode = workmode_log;			// Betriebsmodus (Energiespar-Funktion)
-event_type 			event;										// Event für die Detektierung einer Grenzwertüberschreitung
+event_type 			event;										// Event fï¿½r die Detektierung einer Grenzwertï¿½berschreitung
 
 s_accelerometerValues 			acceleration_actual_global;
 s_accelerometerValuesFloat 	acceleration_actual_float;
 
 
-/* Trigger-Flags für das Einlesen von Daten */
+/* Trigger-Flags fï¿½r das Einlesen von Daten */
 char 						getDataset;
 char 						getTemp;
 char 						getLight;
@@ -183,7 +183,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	
 	if(ACCELERATION_ENABLE){
-		// Acc-Sensor über I2C deaktivieren und dann wieder aktivieren, damit dieser sicher aktiviert wird
+		// Acc-Sensor ï¿½ber I2C deaktivieren und dann wieder aktivieren, damit dieser sicher aktiviert wird
 		HAL_Delay(5000);
 		ACC_deactivate(&hi2c3);
 		HAL_Delay(500);
@@ -268,7 +268,7 @@ int main(void)
 					getTemp = 0;
 					getDataset--;
 					
-					sensor_set[actualSet].temperature = 300 * 2 * Temp_Raw / 4096 - 273;		/* Umrechnung der 12-Bit Rohdaten in °C */
+					sensor_set[actualSet].temperature = 300 * 2 * Temp_Raw / 4096 - 273;		/* Umrechnung der 12-Bit Rohdaten in ï¿½C */
 					Temp = sensor_set[actualSet].temperature;
 				}
 			}
@@ -314,7 +314,7 @@ int main(void)
 		
 
 		
-		/* Füllen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
+		/* Fï¿½llen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
 		if((actualSet == datasetCount) | writeDataset | (event == eject_card)){
 			HAL_NVIC_DisableIRQ(TIM4_IRQn);
 			if(SDIO_ENABLE){
@@ -607,6 +607,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : SDIO_detect_Pin */
+  GPIO_InitStruct.Pin = SDIO_detect_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SDIO_detect_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : VBUS_FS_Pin */
   GPIO_InitStruct.Pin = VBUS_FS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -653,12 +659,12 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void Timer4_Init(void){
 	RCC->APB1ENR |= (1<<2); 					// APB: Advanced Perifery Bridge
-	TIM4->PSC = 4200-1;								// Prescaler für Timer 4
+	TIM4->PSC = 4200-1;								// Prescaler fï¿½r Timer 4
 	TIM4->ARR = 20000-1;							// Autoreload Limit
 	
 	TIM4->DIER |= 0x1;								// Enable Timer 4 for set an Interrupt
-	NVIC_EnableIRQ(TIM4_IRQn);				// Enable Interrupt für Timer 4
-	TIM4->CR1 |= 0x1;									// Konfig-Register für Timer 4 / Channel 1
+	NVIC_EnableIRQ(TIM4_IRQn);				// Enable Interrupt fï¿½r Timer 4
+	TIM4->CR1 |= 0x1;									// Konfig-Register fï¿½r Timer 4 / Channel 1
 }
 
 void AnalogWDG_Init(void){

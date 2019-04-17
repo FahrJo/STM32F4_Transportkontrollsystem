@@ -152,7 +152,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	s_accelerometerValues acceleration_actual;
-	s_accelerometerValues acceleration_ringbuffer[ACC_MAX_ANZAHL_WERTE];
+	//s_accelerometerValues acceleration_ringbuffer[ACC_MAX_ANZAHL_WERTE];
 	HAL_StatusTypeDef i2c_status = HAL_BUSY;
   /* USER CODE END 1 */
 
@@ -183,8 +183,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	
 	if(ACCELERATION_ENABLE){
+		
 		// Acc-Sensor �ber I2C deaktivieren und dann wieder aktivieren, damit dieser sicher aktiviert wird
-		HAL_Delay(5000);
+		HAL_Delay(500);
 		ACC_deactivate(&hi2c3);
 		HAL_Delay(500);
 		ACC_activate(&hi2c3);
@@ -584,11 +585,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(INT_Acceleration2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : BOOT1_Pin */
-  GPIO_InitStruct.Pin = BOOT1_Pin;
+  /*Configure GPIO pins : BOOT1_Pin SD_Detect_Pin */
+  GPIO_InitStruct.Pin = BOOT1_Pin|SD_Detect_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(BOOT1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : CLK_IN_Pin */
   GPIO_InitStruct.Pin = CLK_IN_Pin;
@@ -606,12 +607,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : SDIO_detect_Pin */
-  GPIO_InitStruct.Pin = SDIO_detect_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(SDIO_detect_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : VBUS_FS_Pin */
   GPIO_InitStruct.Pin = VBUS_FS_Pin;

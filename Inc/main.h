@@ -107,8 +107,6 @@
 #define LED5_GPIO_Port GPIOD
 #define LED6_Pin GPIO_PIN_15
 #define LED6_GPIO_Port GPIOD
-#define SDIO_detect_Pin GPIO_PIN_7
-#define SDIO_detect_GPIO_Port GPIOC
 #define SDA_Accelerometer_GNSS_Pin GPIO_PIN_9
 #define SDA_Accelerometer_GNSS_GPIO_Port GPIOC
 #define SCL_Accelerometer_GNSS_Pin GPIO_PIN_8
@@ -133,6 +131,8 @@
 #define SWO_GPIO_Port GPIOB
 #define Audio_SCL_Pin GPIO_PIN_6
 #define Audio_SCL_GPIO_Port GPIOB
+#define SD_Detect_Pin GPIO_PIN_7
+#define SD_Detect_GPIO_Port GPIOB
 
 /* ########################## Assert Selection ############################## */
 /**

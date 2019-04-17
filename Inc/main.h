@@ -95,8 +95,14 @@
 #define INT_Acceleration2_Pin GPIO_PIN_4
 #define INT_Acceleration2_GPIO_Port GPIOC
 #define INT_Acceleration2_EXTI_IRQn EXTI4_IRQn
+#define GPS_Reset_out_Pin GPIO_PIN_0
+#define GPS_Reset_out_GPIO_Port GPIOB
 #define BOOT1_Pin GPIO_PIN_2
 #define BOOT1_GPIO_Port GPIOB
+#define GPS_WakeUp_Pin GPIO_PIN_10
+#define GPS_WakeUp_GPIO_Port GPIOE
+#define GPS_ONOFF_Pin GPIO_PIN_12
+#define GPS_ONOFF_GPIO_Port GPIOE
 #define CLK_IN_Pin GPIO_PIN_10
 #define CLK_IN_GPIO_Port GPIOB
 #define LED4_Pin GPIO_PIN_12

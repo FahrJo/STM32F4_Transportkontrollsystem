@@ -136,6 +136,7 @@ int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
 				else { }; // nichts oder keinen der beiden Sentences gefunden
 		} // ende if der '$' suche
 	} // ende while der '$' suche
+	// TODO: Silas vervollstädnigen und für jeden Zweig return
 // so kann man schauen, ob in dem Datensatz schon was steht oder noch leer
 //gpsActualDataset->NMEA_GPGGA[0] != '$'..... strcmp(
 }

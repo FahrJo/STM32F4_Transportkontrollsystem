@@ -67,6 +67,7 @@ SD_HandleTypeDef hsd;
 SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_usart3_rx;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -154,6 +155,8 @@ void setPreferences(char* buff, UINT buffLength);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	uint8_t gpsRxRingBuffer[201] = {0};
+	
 	s_accelerometerValues acceleration_actual;
 	//s_accelerometerValues acceleration_ringbuffer[ACC_MAX_ANZAHL_WERTE];
 	HAL_StatusTypeDef i2c_status = HAL_BUSY;
@@ -236,6 +239,13 @@ int main(void)
 		HAL_ADC_Start_IT(&hadc1);
 	}
 
+	/* Starte GPS UART DMA -----------------------------------------------------*/
+	if(GNSS_ENABLE){
+		HAL_UART_Receive_DMA(&huart3, gpsRxRingBuffer,200);
+		__HAL_UART_ENABLE_IT(&huart3, UART_IT_TC );
+		__HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE );
+	}
+			
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -520,8 +530,12 @@ static void MX_DMA_Init(void)
 {
   /* DMA controller clock enable */
   __HAL_RCC_DMA2_CLK_ENABLE();
+  __HAL_RCC_DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
+  /* DMA1_Stream1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
   /* DMA2_Stream0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);

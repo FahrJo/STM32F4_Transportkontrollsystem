@@ -42,6 +42,7 @@
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc1;
 extern ADC_HandleTypeDef hadc1;
+extern DMA_HandleTypeDef hdma_usart3_rx;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -152,6 +153,20 @@ void EXTI4_IRQHandler(void)
 }
 
 /**
+* @brief This function handles DMA1 stream1 global interrupt.
+*/
+void DMA1_Stream1_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Stream1_IRQn 0 */
+	// TODO: Silas hier dann eigentlich nichts? alles im UART IRQ unten
+  /* USER CODE END DMA1_Stream1_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_usart3_rx);
+  /* USER CODE BEGIN DMA1_Stream1_IRQn 1 */
+
+  /* USER CODE END DMA1_Stream1_IRQn 1 */
+}
+
+/**
 * @brief This function handles ADC1, ADC2 and ADC3 global interrupts.
 */
 void ADC_IRQHandler(void)
@@ -180,6 +195,15 @@ void DMA2_Stream0_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+/**
+* 
+*/
+void USART3_IRQHandler(void)
+{
+	// TODO: Silas das wird ausgelost wenn ueertragung pausiert (sehr oft)  oder alle 80 zeichen durchsind(eig.nie?)
+	// DMA groeﬂer als 80 zB 200 machen. dann kann man immer eines abholen. getriggert HIER (oder direkt machen)
+	//HAL_UART_IRQHandler(&huart3);
+}
 
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

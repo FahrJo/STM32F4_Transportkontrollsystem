@@ -133,10 +133,14 @@ int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
 					gpsActualDataset->NMEA_GPGGA[copyindex] = '\0'; // stringende ans Ende
 					return 0; //erfolgreich GPGGA eingelesen
 				}
-				else { }; // nichts oder keinen der beiden Sentences gefunden
+				else {
+					return 1; // keinen der beiden Sentences gefunden
+				} 
 		} // ende if der '$' suche
 	} // ende while der '$' suche
-	// TODO: Silas vervollstädnigen und für jeden Zweig return
+	return -1; // string enthielt kein $
+
+	
 // so kann man schauen, ob in dem Datensatz schon was steht oder noch leer
 //gpsActualDataset->NMEA_GPGGA[0] != '$'..... strcmp(
 }
@@ -168,8 +172,6 @@ int GPS_getVelocity(s_gpsSetOfData* gpsActualDataset)
 		}
 		cursor++;
 	}
-	
-	
 	return -1; //error
 }
 	
@@ -245,7 +247,7 @@ float ACC_convertAccelToFloat(int16_t rohDaten, uint8_t breiteInBit, uint8_t mes
 	// 1000 0000 0000 = -2 / -4 / -8
 	float accelerationFloat;
 	
-	accelerationFloat = (rohDaten * messbereich) / (float)(1<<(breiteInBit-1)); //TODO???????
+	accelerationFloat = (rohDaten * messbereich) / (float)(1<<(breiteInBit-1)); //TODO?
 	
 	return accelerationFloat;
 }

@@ -71,7 +71,6 @@ DMA_HandleTypeDef hdma_usart3_rx;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
 // Flags f�r die Aktivierung von Softwarefunktionen
 char SDIO_ENABLE 					=	1;
 char ACCELERATION_ENABLE 	=	1;
@@ -114,6 +113,8 @@ event_type 			event;										// Event f�r die Detektierung einer Grenzwert�
 s_accelerometerValues 			acceleration_actual_global;
 s_accelerometerValuesFloat 	acceleration_actual_float;
 
+char 						g_newGPSData = 0;					// Flag wenn neue Daten im Buffer anstehen wird von DMA IR-Handler gesetzt
+s_gpsSetOfData  gpsActualDataset;					// Set mit aktuellsten GPS Daten
 
 /* Trigger-Flags f�r das Einlesen von Daten */
 char 						getDataset;
@@ -155,7 +156,7 @@ void setPreferences(char* buff, UINT buffLength);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint8_t gpsRxRingBuffer[201] = {0};
+	char gpsRxRingBuffer[GPS_RINGBUFFER_SIZE] = {0};
 	
 	s_accelerometerValues acceleration_actual;
 	//s_accelerometerValues acceleration_ringbuffer[ACC_MAX_ANZAHL_WERTE];
@@ -241,7 +242,7 @@ int main(void)
 
 	/* Starte GPS UART DMA -----------------------------------------------------*/
 	if(GNSS_ENABLE){
-		HAL_UART_Receive_DMA(&huart3, gpsRxRingBuffer,200);
+		HAL_UART_Receive_DMA(&huart3, (uint8_t*)&gpsRxRingBuffer, GPS_RINGBUFFER_SIZE);
 		__HAL_UART_ENABLE_IT(&huart3, UART_IT_TC );
 		__HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE );
 	}
@@ -319,8 +320,15 @@ int main(void)
 				if(getPosition | getDataset){
 					getPosition = 0;
 					getDataset--;
+					//check for new UART GPS Data, and read in before using GPS dataset
+					if(g_newGPSData){
+						// read in new data
+						GPS_sortInNewData(&gpsActualDataset, gpsRxRingBuffer);
+						g_newGPSData = 0; // reset flag	
+					}
 					// ...
-					sensor_set[actualSet].timestamp = clock_time;
+				//	sensor_set[actualSet].position =  gpsActualDataset.actualPos; // aus aktuellem GPS Set
+					sensor_set[actualSet].timestamp = clock_time; // von Timer incrementiert, kann aber auch noch von GPS ab und so korrigiert werden
 				}
 			}
 			

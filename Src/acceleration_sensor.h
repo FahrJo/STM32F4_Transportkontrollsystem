@@ -33,7 +33,7 @@ READ ONLY !!!! */
 // 001110(0/1)+R/W   0011 100x  /bzw/ 0011 101x   0x1C, 0x1D wären die Beiden ohne r/w bit  38 / 3A
 #define ACCELEROMETER_I2C_ADRESS 0x3A
 
-
+#define GPS_RINGBUFFER_SIZE 500
 
 typedef struct {
 	int16_t x_Value;

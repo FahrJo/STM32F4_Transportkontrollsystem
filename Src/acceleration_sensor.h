@@ -33,8 +33,6 @@ READ ONLY !!!! */
 // 001110(0/1)+R/W   0011 100x  /bzw/ 0011 101x   0x1C, 0x1D wären die Beiden ohne r/w bit  38 / 3A
 #define ACCELEROMETER_I2C_ADRESS 0x3A
 
-#define GPS_RINGBUFFER_SIZE 500
-
 typedef struct {
 	int16_t x_Value;
 	int16_t y_Value;
@@ -46,14 +44,6 @@ typedef struct {
 	float y_Value;
 	float z_Value;
 }s_accelerometerValuesFloat;
-
-typedef struct {
-	char NMEA_GPRMC[80]; // $GPRMC,blabli
-	char NMEA_GPGGA[80]; // $GPGGA,blabla
-	uint16_t actualPos[2]; //fraglich ob diese mit in die Funktion sollen)
-	uint16_t lastPos[2];
-	char savedToSD;
-}s_gpsSetOfData;
 
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,11 +57,5 @@ float ACC_convertAccelToFloat(int16_t rohDaten, uint8_t breiteInBit, uint8_t mes
 
 void ACC_incrementAdress(void);
 void ACC_setAdress(uint8_t);
-
-int GPS_activateReceiver(void);
-int GPS_deactivateReceiver(void);
-int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString);
-int GPS_getVelocity(s_gpsSetOfData* gpsActualDataset); // als INT in ZentiMeter pro Sekunde ( GG.G -> int
-int GPS_getMovedDistance(s_gpsSetOfData* gpsActualDataset); // in Meter
 
 #endif

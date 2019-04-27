@@ -28,7 +28,7 @@
 
 #include "hilfsfunktionen.h"
 
-
+ 
 
 #define CHARISNUM(x)                        ((x) >= '0' && (x) <= '9')
 #define CHARISHEXNUM(x)                     (((x) >= '0' && (x) <= '9') || ((x) >= 'a' && (x) <= 'f') || ((x) >= 'A' && (x) <= 'F'))

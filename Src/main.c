@@ -54,6 +54,7 @@
 /* USER CODE BEGIN Includes */
 #include "card_operations.h"
 #include "acceleration_Sensor.h"
+#include "gps_modul.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/

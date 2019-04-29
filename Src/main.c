@@ -268,11 +268,11 @@ int main(void)
 					getDataset--;
 					
 					if(HAL_GPIO_ReadPin(INT_Photodiode_GPIO_Port, INT_Photodiode_Pin) == 1){
-						HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
+						//HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
 						sensor_set[actualSet].open = 1;
 					}
 					else{
-						HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_RESET);
+						//HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_RESET);
 						sensor_set[actualSet].open = 0;
 					}
 				}

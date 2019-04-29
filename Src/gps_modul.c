@@ -62,13 +62,21 @@ int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
 {
 	char gpsTypFound = 0; // GPRMC (0000 0001 -> 0x1) , GPGGA (0000 0010 -> 0x2) , ((other (other)
 	int16_t cursor = 0; 
-	char copyindex=0;
+	char copyindex = 0;
+	char kommaZaehlerValidierung = 0;
 	// fehler abfangen falls pNewNmeaString kurzer ist und kein \0 enthält
 	// nach gefunden testen, ob zwischen '$' und '*' <=80 Zeichen 
+	// wenn erwartete Anzahl an Komma enthalten, ist Satz richtig und wird in diesem Buffer einleseVorgang nicht mehr eingelesen
+	// ist es nicht, ist er moeglicherweise korruptiert und wird beim naechsten mal eingelesen
 	while((GPS_RINGBUFFER_SIZE-2) > cursor && pNewNmeaString[cursor] != '\0' ){
 		if(pNewNmeaString[cursor] == '$'){
-			// NMEA-Sentence Anfang gefunden an stelle cursor
-			if(pNewNmeaString[cursor+1]=='G' && pNewNmeaString[cursor+2]=='P' 
+			// NMEA-Sentence Anfang gefunden an stelle cursor // wenn neuer satz durch $ gefunden. diese Var zuruecksetzen
+			copyindex = 0;
+			kommaZaehlerValidierung = 0;
+		
+			// wenn dieser Typ noch nicht gefunden wurde, gefundene NMEA-Sentence weiter danach untersuchen
+			if(((gpsTypFound & 0x1) != 0)
+				&& pNewNmeaString[cursor+1]=='G' && pNewNmeaString[cursor+2]=='P' 
 				&& pNewNmeaString[cursor+3]=='R' && pNewNmeaString[cursor+4]=='M' 
 				&& pNewNmeaString[cursor+5]=='C' && pNewNmeaString[cursor+6]==','){
 					// GPRMC Sentence entdeckt
@@ -78,28 +86,40 @@ int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
 						 kommt cursor+copyindex ans Ende des Buffers, zB. Size=500, ans 500 Zeichen, also Index 499 so wird das kopiert
 						danach beim index 500 greift Modulo und man kopiert vom 1. Zeichen mit index 0 (->ringbuffer)*/
 						gpsActualDataset->NMEA_GPRMC[copyindex] = pNewNmeaString[(cursor+copyindex)%GPS_RINGBUFFER_SIZE];
+						if(gpsActualDataset->NMEA_GPRMC[copyindex] == ',')kommaZaehlerValidierung++;
 						copyindex++;
 					}
 					gpsActualDataset->NMEA_GPRMC[copyindex] = '\0'; // stringende ans Ende
-					gpsTypFound |= 0x1; //erfolgreich GPRMC eingelesen
+					if(kommaZaehlerValidierung == GPRMC_ANZAHL_KOMMA){
+						gpsTypFound |= 0x1; //erfolgreich GPRMC eingelesen
+					}
 				}
-			else if(pNewNmeaString[cursor+1]=='G' && pNewNmeaString[cursor+2]=='P' 
+			// wenn dieser Typ noch nicht gefunden wurde, gefundene NMEA-Sentence weiter danach untersuchen
+			else if(((gpsTypFound & 0x2) != 0)
+				&& pNewNmeaString[cursor+1]=='G' && pNewNmeaString[cursor+2]=='P' 
 				&& pNewNmeaString[cursor+3]=='G' && pNewNmeaString[cursor+4]=='G' 
 				&& pNewNmeaString[cursor+5]=='A' && pNewNmeaString[cursor+6]==','){
 					// GPGGA Sentence entdeckt
 					// Datensatz von Null ab füllen, aus Eingangs-String mit offset, wo das $ beginnt ($ mitkopieren)
 					while(80 > copyindex && pNewNmeaString[cursor+copyindex] != '\0' && pNewNmeaString[cursor+copyindex] != '*')	{
 						gpsActualDataset->NMEA_GPGGA[copyindex] = pNewNmeaString[cursor+copyindex];
+						if(gpsActualDataset->NMEA_GPGGA[copyindex] == ',')kommaZaehlerValidierung++;
 						copyindex++;
 					}
 					gpsActualDataset->NMEA_GPGGA[copyindex] = '\0'; // stringende ans Ende
-					gpsTypFound |= 0x2; //erfolgreich GPGGA eingelesen
+					if(kommaZaehlerValidierung == GPGGA_ANZAHL_KOMMA){
+						gpsTypFound |= 0x2; //erfolgreich GPGGA eingelesen
+					}
 				}
 				else {} // nop; einen anderen Sentences gefunden, buffer enthält aber mehrere also weitersuchen
 		} // ende if der '$' suche
 		if(gpsTypFound==0x3) return 0; // abbruch wenn beide NMEA mindestens einmal gefunden wurden
 	} // ende while der '$' suche
-	return -1; // string enthielt kein $
+	
+	// string enthielt nicht beide Sätze vollständig
+	if(gpsTypFound==0x01) sprintf(gpsActualDataset->NMEA_GPGGA, "kein GPGGA empfangen * ");
+	else if(gpsTypFound==0x02) sprintf(gpsActualDataset->NMEA_GPRMC, "kein GPRMC empfangen * ");
+	return -1; 
 
 	
 // so kann man schauen, ob in dem Datensatz schon was steht oder noch leer
@@ -108,7 +128,8 @@ int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
 
 int GPS_getVelocity(s_gpsSetOfData* gpsActualDataset) 
 {
-// als INT in ZentiMeter pro Sekunde ( GG.G -> int
+// als INT in ZentiMeter pro Sekunde ( GGG.G -> int
+	const float knotsToCentimeterPerSecond = 100*0.514;
 	char cursor=0, i=0;
 	char commaCounter=0;
 	char velocityString[6]; // xxx.x\0 =6
@@ -127,9 +148,7 @@ int GPS_getVelocity(s_gpsSetOfData* gpsActualDataset)
 			}
 			velocityString[i]='\0'; // an 6. Stelle, i=5
 			
-			return (int)10*myParseFloatNumber(velocityString, &anzahlStellenGenutzt);
-			// hier jetzt aus eingebundener Lib zu fload oder Int parsen
-			// und funktion return richtige Value
+			return (int)(knotsToCentimeterPerSecond * myParseFloatNumber(velocityString, &anzahlStellenGenutzt));
 		}
 		cursor++;
 	}

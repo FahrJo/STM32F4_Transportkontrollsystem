@@ -328,8 +328,11 @@ int main(void)
 						GPS_sortInNewData(&gpsActualDataset, gpsRxRingBuffer);
 						g_newGPSData = 0; // reset flag	
 					}
-					// ...
-				//	sensor_set[actualSet].position =  gpsActualDataset.actualPos; // aus aktuellem GPS Set
+					// aus aktuellem GPS Set
+				//	strcpy(sensor_set[actualSet].NMEA_GPGGA, gpsActualDataset.NMEA_GPGGA);
+			  //	strcpy(sensor_set[actualSet].NMEA_GPRMC, gpsActualDataset.NMEA_GPRMC); // so wenn sensorSet zweimal char[80] enthält
+					sensor_set[actualSet].NMEA_GPRMC = gpsActualDataset.NMEA_GPRMC;
+					sensor_set[actualSet].NMEA_GPGGA = gpsActualDataset.NMEA_GPGGA;
 					sensor_set[actualSet].timestamp = clock_time; // von Timer incrementiert, kann aber auch noch von GPS ab und so korrigiert werden
 				}
 			}

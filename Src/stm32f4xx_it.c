@@ -159,6 +159,8 @@ void DMA1_Stream1_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Stream1_IRQn 0 */
 	// TODO: Silas hier dann eigentlich nichts? alles im UART IRQ unten
+	
+	
   /* USER CODE END DMA1_Stream1_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_usart3_rx);
   /* USER CODE BEGIN DMA1_Stream1_IRQn 1 */
@@ -202,7 +204,7 @@ void USART3_IRQHandler(void)
 {
 	// TODO: Silas das wird ausgelost wenn ueertragung pausiert (sehr oft)  oder alle 80 zeichen durchsind(eig.nie?)
 	// DMA groe�er als 80 zB 200 machen. dann kann man immer eines abholen. getriggert HIER (oder direkt machen)
-	//HAL_UART_IRQHandler(&huart3);
+//	HAL_UART_IRQHandler(&huart3);
 }
 
 /* USER CODE END 1 */

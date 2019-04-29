@@ -6,6 +6,9 @@
 #include "hilfsfunktionen.h"
 
 #define GPS_RINGBUFFER_SIZE 500
+#define GPGGA_ANZAHL_KOMMA 14
+#define GPRMC_ANZAHL_KOMMA 11
+
 
 typedef struct {
 	char NMEA_GPRMC[80]; // $GPRMC,blabli

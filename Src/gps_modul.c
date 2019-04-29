@@ -43,7 +43,15 @@ int GPS_deactivateReceiver(void)
 	else return -1; // deaktivieren fehlgeschlagen. TODO: kann bei eigenständigem ONpuls fehlerhaft sein
 }
 
+/*
+weitere Funktionen, die Implementiert werden können: 
+- Pausieren, um Strom zu sparen: DMA pausieren, ModulDeactivate, prüfen ob erfolgreich
+- Resume: ModulActivate, wenn erfolgreich -> DMAResume
 
+Dazu hilfreich: HAL_StatusTypeDef HAL_UART_DMAPause(UART_HandleTypeDef *huart);
+								HAL_StatusTypeDef HAL_UART_DMAResume(UART_HandleTypeDef *huart);
+
+*/
 
 // zwei Schleifen schachteln. äußere sucht nach "§" und gibt dann jeweilige Stringteil, also eine NMEA Nachricht weiter.
 // innere sucht entsprechend der MessageID nach einem bestimmten Paramter -> Komma zählen
@@ -103,7 +111,7 @@ int GPS_getVelocity(s_gpsSetOfData* gpsActualDataset)
 // als INT in ZentiMeter pro Sekunde ( GG.G -> int
 	char cursor=0, i=0;
 	char commaCounter=0;
-	char velocityString[7]; // xxx.x\0 =6
+	char velocityString[6]; // xxx.x\0 =6
 	uint8_t anzahlStellenGenutzt;
 	while(80 > cursor && gpsActualDataset->NMEA_GPRMC[cursor] != '\0' && gpsActualDataset->NMEA_GPRMC[cursor] != '*'){
 		if(gpsActualDataset->NMEA_GPRMC[cursor] == ','){
@@ -115,9 +123,9 @@ int GPS_getVelocity(s_gpsSetOfData* gpsActualDataset)
 			while(gpsActualDataset->NMEA_GPRMC[cursor+1 + i] != ','){
 				velocityString[i] = gpsActualDataset->NMEA_GPRMC[cursor+1 + i];
 				i++;
-				if(i>6)return -1; // sollte nicht so weit gehen->Fehler
+				if(i>=6)return -1; // sollte nicht so weit gehen->Fehler
 			}
-			velocityString[i]='\0';
+			velocityString[i]='\0'; // an 6. Stelle, i=5
 			
 			return (int)10*myParseFloatNumber(velocityString, &anzahlStellenGenutzt);
 			// hier jetzt aus eingebundener Lib zu fload oder Int parsen

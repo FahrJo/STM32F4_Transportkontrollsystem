@@ -201,7 +201,7 @@ void DMA2_Stream0_IRQHandler(void)
 void USART3_IRQHandler(void)
 {
 	// TODO: Silas das wird ausgelost wenn ueertragung pausiert (sehr oft)  oder alle 80 zeichen durchsind(eig.nie?)
-	// DMA groeßer als 80 zB 200 machen. dann kann man immer eines abholen. getriggert HIER (oder direkt machen)
+	// DMA groeï¿½er als 80 zB 200 machen. dann kann man immer eines abholen. getriggert HIER (oder direkt machen)
 	//HAL_UART_IRQHandler(&huart3);
 }
 

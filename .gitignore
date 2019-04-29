@@ -9,3 +9,4 @@ MDK-ARM/Studienarbeit_1/
 *.hex
 *.axf
 *.uvoptx
+*.lst

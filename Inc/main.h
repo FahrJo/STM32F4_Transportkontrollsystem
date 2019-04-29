@@ -160,7 +160,8 @@ typedef enum {
 	open_event,
 	vibration_event,
 	temp_event,
-	eject_card
+	eject_card,
+	deactivate_gnss
 } event_type;
 	
 	 

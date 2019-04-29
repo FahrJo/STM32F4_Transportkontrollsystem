@@ -75,7 +75,7 @@ DMA_HandleTypeDef hdma_usart3_rx;
 // Flags f�r die Aktivierung von Softwarefunktionen
 char SDIO_ENABLE 					=	1;
 char ACCELERATION_ENABLE 	=	1;
-char GNSS_ENABLE 					=	1;
+char GNSS_ENABLE 					=	1; 
 char LIGHT_ENABLE 				=	1;
 char TEMP_ENABLE 					=	1;
 char ACC_MAX_ANZAHL_WERTE =	20;
@@ -204,6 +204,7 @@ int main(void)
 	if(GNSS_ENABLE) {
 		GNSS_ENABLE = 0; // erst mal deaktiveren, wenn GPS aktivierung erfolgreich wird es wieder ENABLED
 		// wenn nach 4 Versuchen, das Modul nicht aktivert werden kann, bleibt GNSS_ENABLE=0 und das Programm lauft "normal" weiter
+		HAL_GPIO_WritePin(GPS_Reset_out_GPIO_Port, GPS_Reset_out_Pin, GPIO_PIN_SET);
 		for(int i=0;i<4;i++){
 			
 			if(-1 != GPS_activateReceiver()){ //GPS erfolgreich aktiviert, for-Schleife verlassen
@@ -285,7 +286,7 @@ int main(void)
 					getTemp = 0;
 					getDataset--;
 					
-					sensor_set[actualSet].temperature = 300 * 2 * Temp_Raw / 4096 - 273;		/* Umrechnung der 12-Bit Rohdaten in �C */
+					sensor_set[actualSet].temperature = 300 * 2 * Temp_Raw / 4096 - 273;    /* Umrechnung der 12-Bit Rohdaten in �C */
 					Temp = sensor_set[actualSet].temperature;
 				}
 			}
@@ -338,8 +339,8 @@ int main(void)
 		
 
 		
-		/* F�llen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
-		if((actualSet == datasetCount) | writeDataset | (event == eject_card)){
+		/* Fuellen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
+		if((actualSet == datasetCount) | writeDataset | (event == eject_card)) {
 			HAL_NVIC_DisableIRQ(TIM4_IRQn);
 			if(SDIO_ENABLE){
 				write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet, &cursor);
@@ -348,12 +349,21 @@ int main(void)
 			actualSet = 0;
 			if(event == eject_card){
 				HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
-				event = no_event;
+				event = deactivate_gnss;               /* Deaktiviere GNSS-Modul vor dem Abschalten */
 			}
 			else{
 				HAL_NVIC_EnableIRQ(TIM4_IRQn);
 			}
 		}
+		
+		/* Deaktivieren des GNSS-Moduls -------------------------------------------*/
+		if(event == deactivate_gnss) {
+			if(GPS_deactivateReceiver() != -1) {
+				HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
+				event = no_event;
+			}
+		}
+			
 		
 		//HAL_Delay(100);
   }
@@ -636,7 +646,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : GPS_Reset_out_Pin */
   GPIO_InitStruct.Pin = GPS_Reset_out_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPS_Reset_out_GPIO_Port, &GPIO_InitStruct);

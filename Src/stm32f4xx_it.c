@@ -34,7 +34,7 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_it.h"
-
+#include "main.h"
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
@@ -200,12 +200,22 @@ void DMA2_Stream0_IRQHandler(void)
 /**
 * 
 */
-void USART3_IRQHandler(void)
-{
+
 	// TODO: Silas das wird ausgelost wenn ueertragung pausiert (sehr oft)  oder alle 80 zeichen durchsind(eig.nie?)
 	// DMA groe�er als 80 zB 200 machen. dann kann man immer eines abholen. getriggert HIER (oder direkt machen)
-//	HAL_UART_IRQHandler(&huart3);
-}
+		 /* @brief This function handles USART3 global interrupt.
+  */
+void USART3_IRQHandler(void)
+{
+	extern UART_HandleTypeDef huart3;
+	extern char g_newGPSData;
+  /* USER CODE BEGIN USART3_IRQn 0 */
+	g_newGPSData = 1;
+	
+  /* USER CODE END USART3_IRQn 0 */
+  HAL_UART_IRQHandler(&huart3);
+  /* USER CODE BEGIN USART3_IRQn 1 */
 
-/* USER CODE END 1 */
+  /* USER CODE END USART3_IRQn 1 */
+}
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

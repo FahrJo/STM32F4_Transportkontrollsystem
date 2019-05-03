@@ -55,6 +55,7 @@
 #include "card_operations.h"
 #include "acceleration_Sensor.h"
 #include "gps_modul.h"
+#include "..\inih\ini.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -72,58 +73,63 @@ DMA_HandleTypeDef hdma_usart3_rx;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-// Flags f�r die Aktivierung von Softwarefunktionen
-char SDIO_ENABLE 					=	1;
-char ACCELERATION_ENABLE 	=	1;
-char GNSS_ENABLE 					=	1; 
-char LIGHT_ENABLE 				=	1;
-char TEMP_ENABLE 					=	1;
-char ACC_MAX_ANZAHL_WERTE =	20;
+uint8_t GET_DATA;														 		/* Initialisierungswert f�r das Sammeln eines kompletten Datensatzes */
 
-// Initialisierungswert f�r das Sammeln eines kompletten Datensatzes
-char GET_DATA;
+typedef struct
+{
+  uint16_t MAX_TEMP;
+	uint16_t MIN_TEMP;
+	uint16_t MAX_TEMP_RAW;												/* Oberer Schwellwert des Analog */
+	uint16_t MIN_TEMP_RAW;												/* Temperatur in K, UEBER der ein Interrupt ausgeloest wird */
+	uint16_t MAX_ACC;
+	uint8_t ACCELERATION_ENABLE;
+	uint8_t GNSS_ENABLE; 
+	uint8_t LIGHT_ENABLE;
+	uint8_t TEMP_ENABLE;
+	uint16_t ACC_MAX_ANZAHL_WERTE;
+} configuration;
 
-int MAX_TEMP							= 333;		// Temperatur in K, �BER der ein Interrupt ausgel�st wird
-int MIN_TEMP							= 263;		// Temperatur in K, UNTER der ein Interrupt ausgel�st wird
+configuration config;
 
-int MAX_TEMP_RAW;
-int MIN_TEMP_RAW;
+static int Preferences_Handler(void* user, const char* section, const char* name, const char* value);		/* Handler für Config-Parser */
 
 
-const uint16_t 	datasetCount = 20;				// Anzahl der Datens�tze, die gesammelt auf die Karte geschrieben werden
-uint16_t				actualSet = 0;						// Momentan aktiver Datensatz
+
+
+const uint16_t 	datasetCount = 100;							/* Anzahl der Datens�tze, die gesammelt auf die Karte geschrieben werden */
+uint16_t				actualSet = 0;									/* Momentan aktiver Datensatz */
 ADC_AnalogWDGConfTypeDef AnalogWDGConf;
 
 struct tm				clock_time;
 
 FATFS 					myFatFS;
-FIL 						logFile;									// Dateihandle auf SD-Karte
-FIL 						configFile;								// Dateihandle auf SD-Karte
-UINT 						cursor;										// Letztes Zeichen in CSV-Datei
-UINT 						configCursor;							// Letztes Zeichen in CSV-Datei
+FIL 						logFile;												/* Dateihandle auf SD-Karte */
+FIL 						configFile;											/* Dateihandle auf SD-Karte */
+UINT 						cursor;													/* Letztes Zeichen in CSV-Datei */
+UINT 						configCursor;										/* Letztes Zeichen in CSV-Datei */
 char 						logFileName[] = "Log3.csv";
-char 						configFileName[] = "config.txt";
-char 						configBuffer[128];
+char 						configFileName[] = "config.ini";
+char	 					configBuffer[1024];
 char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n";
-uint32_t 				Temp_Raw;									// Temperatur in 12 Bit aus ADC
-uint16_t 				Temp;											// Temperatur in �C
-dataset 				sensor_set[datasetCount];	// Datensatz, der im RAM gepuffert wird
-workmode_type 	operation_mode = workmode_log;			// Betriebsmodus (Energiespar-Funktion)
-event_type 			event;										// Event f�r die Detektierung einer Grenzwert�berschreitung
+uint32_t 				Temp_Raw;												/* Temperatur in 12 Bit aus ADC */
+uint16_t 				Temp;														/* Temperatur in �C */
+dataset 				sensor_set[datasetCount];				/* Datensatz, der im RAM gepuffert wird */
+workmode_type 	operation_mode = workmode_log;	/* Betriebsmodus (Energiespar-Funktion) */
+event_type 			event;													/* Event f�r die Detektierung einer Grenzwert�berschreitung */
 
 s_accelerometerValues 			acceleration_actual_global;
 s_accelerometerValuesFloat 	acceleration_actual_float;
 
-char 						g_newGPSData = 0;					// Flag wenn neue Daten im Buffer anstehen wird von DMA IR-Handler gesetzt
-s_gpsSetOfData  gpsActualDataset;					// Set mit aktuellsten GPS Daten
+uint8_t					g_newGPSData = 0;								/* Flag wenn neue Daten im Buffer anstehen wird von DMA IR-Handler gesetzt */
+s_gpsSetOfData  gpsActualDataset;								/* Set mit aktuellsten GPS Daten */
 
 /* Trigger-Flags f�r das Einlesen von Daten */
-char 						getDataset;
-char 						getTemp;
-char 						getLight;
-char 						getAcceleration;
-char 						getPosition;
-char						writeDataset;
+uint8_t 				getDataset;
+uint8_t 				getTemp;
+uint8_t					getLight;
+uint8_t					getAcceleration;
+uint8_t					getPosition;
+uint8_t					writeDataset;
 
 /* USER CODE END PV */
 
@@ -141,7 +147,6 @@ static void MX_USART3_UART_Init(void);
 /* Private function prototypes -----------------------------------------------*/
 void Timer4_Init(void);
 void AnalogWDG_Init(void);
-void setPreferences(char* buff, UINT buffLength);
 
 /* USER CODE END PFP */
 
@@ -157,6 +162,17 @@ void setPreferences(char* buff, UINT buffLength);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	
+	/* Standartwerte */
+	config.MAX_TEMP 						= 333;
+	config.MIN_TEMP 						= 263;
+	config.MAX_ACC 							= 4;
+	config.ACCELERATION_ENABLE 	= 1;
+	config.GNSS_ENABLE					= 1; 
+	config.LIGHT_ENABLE					= 1;
+	config.TEMP_ENABLE					= 1;
+	config.ACC_MAX_ANZAHL_WERTE	= 20;
+	
 	char gpsRxRingBuffer[GPS_RINGBUFFER_SIZE] = {0};
 	
 	s_accelerometerValues acceleration_actual;
@@ -191,9 +207,31 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 	
-	if(ACCELERATION_ENABLE){
-		
-		// Acc-Sensor �ber I2C deaktivieren und dann wieder aktivieren, damit dieser sicher aktiviert wird
+	/* Vorbereiten der SD-Karte ------------------------------------------------*/
+	if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
+		if(f_open(&configFile, configFileName, FA_READ | FA_OPEN_EXISTING) == FR_OK){
+			f_read(&configFile, configBuffer, sizeof(configBuffer), &configCursor);
+			if (ini_parse_string(configBuffer, Preferences_Handler, &config) < 0) {
+        for(int i=0;i<3;i++){										/* wenn Lesefehler dann blinken alle 3 mal */
+					HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+					HAL_Delay(200);
+					HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+					HAL_Delay(200);
+				}
+			}
+		}
+		write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor);
+	}
+	else{
+		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+	}
+
+	Timer4_Init();
+	AnalogWDG_Init();
+	
+	
+	/* Acc-Sensor ueber I2C deaktivieren und dann wieder aktivieren, damit dieser sicher aktiviert wird */
+	if(config.ACCELERATION_ENABLE){
 		HAL_Delay(500);
 		ACC_deactivate(&hi2c3);
 		HAL_Delay(500);
@@ -201,53 +239,30 @@ int main(void)
 		HAL_Delay(500);
 	}
 	
-	if(GNSS_ENABLE) {
-		GNSS_ENABLE = 0; // erst mal deaktiveren, wenn GPS aktivierung erfolgreich wird es wieder ENABLED
-		// wenn nach 4 Versuchen, das Modul nicht aktivert werden kann, bleibt GNSS_ENABLE=0 und das Programm lauft "normal" weiter
+	if(config.GNSS_ENABLE) {
+		config.GNSS_ENABLE = 0; 										/* erst mal deaktiveren, wenn GPS aktivierung erfolgreich wird es wieder ENABLED */
 		HAL_GPIO_WritePin(GPS_Reset_out_GPIO_Port, GPS_Reset_out_Pin, GPIO_PIN_SET);
-		for(int i=0;i<4;i++){
-			
-			if(-1 != GPS_activateReceiver()){ //GPS erfolgreich aktiviert, for-Schleife verlassen
-				GNSS_ENABLE=1;
-				i=5; 
+		for(int i = 0; i < 4; i++){												/* wenn nach 4 Versuchen, das Modul nicht aktivert werden kann, bleibt GNSS_ENABLE=0 und das Programm lauft "normal" weiter */
+				if(-1 != GPS_activateReceiver()){ 				/* GPS erfolgreich aktiviert, for-Schleife verlassen */
+				config.GNSS_ENABLE=1;
+				i = 5;
+
+				/* Starte GPS UART DMA -----------------------------------------------------*/
+				HAL_UART_Receive_DMA(&huart3, (uint8_t*)&gpsRxRingBuffer, GPS_RINGBUFFER_SIZE);
+				__HAL_UART_ENABLE_IT(&huart3, UART_IT_TC );
+				__HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE );
 			}
 			HAL_Delay(100);
 		}
 	}
 
-	
-	/* Vorbereiten der SD-Karte ------------------------------------------------*/
-	if(SDIO_ENABLE){
-		if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
-			if(f_open(&configFile, configFileName, FA_READ | FA_OPEN_EXISTING) == FR_OK){
-				f_read(&configFile, configBuffer, sizeof(configBuffer), &configCursor);
-				setPreferences(configBuffer, sizeof(configBuffer));
-			}
-			write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor);
-		}
-		else{
-			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-		}
-	}
-	// Remove following line if config file works...
-	setPreferences(configBuffer, sizeof(configBuffer));	
-	Timer4_Init();
-	AnalogWDG_Init();
-	
-	GET_DATA = ACCELERATION_ENABLE + GNSS_ENABLE + LIGHT_ENABLE + TEMP_ENABLE;
-	
 	/* Starte ADC --------------------------------------------------------------*/
-	if(TEMP_ENABLE){
+	if(config.TEMP_ENABLE){
 		HAL_ADC_Start_DMA(&hadc1, &Temp_Raw, 1);
 		HAL_ADC_Start_IT(&hadc1);
 	}
-
-	/* Starte GPS UART DMA -----------------------------------------------------*/
-	if(GNSS_ENABLE){
-		HAL_UART_Receive_DMA(&huart3, (uint8_t*)&gpsRxRingBuffer, GPS_RINGBUFFER_SIZE);
-		__HAL_UART_ENABLE_IT(&huart3, UART_IT_TC );
-		__HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE );
-	}
+	
+	GET_DATA = config.ACCELERATION_ENABLE + config.GNSS_ENABLE + config.LIGHT_ENABLE + config.TEMP_ENABLE;		/* initialisiere Counter zum sammeln eines Datensatzes */
 			
   /* USER CODE END 2 */
 
@@ -262,24 +277,22 @@ int main(void)
 		if(getLight | getTemp | getAcceleration | getPosition | getDataset){
 		
 			/* Einlesen der Fotodiode und Ablage in den Datensatz ------------------*/
-			if(LIGHT_ENABLE){
+			if(config.LIGHT_ENABLE){
 				if(getLight | getDataset){
 					getLight = 0;
 					getDataset--;
 					
 					if(HAL_GPIO_ReadPin(INT_Photodiode_GPIO_Port, INT_Photodiode_Pin) == 1){
-						//HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
 						sensor_set[actualSet].open = 1;
 					}
 					else{
-						//HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_RESET);
 						sensor_set[actualSet].open = 0;
 					}
 				}
 			}
 			
 			/* Einlesen der Temperatur und Ablage in den Datensatz -----------------*/
-			if(TEMP_ENABLE){
+			if(config.TEMP_ENABLE){
 				HAL_ADC_Start_IT(&hadc1);
 				
 				if(getTemp | getDataset){
@@ -292,7 +305,7 @@ int main(void)
 			}
 			
 			/* Einlesen der Beschleunigungsdaten und Ablage in den Datensatz -------*/
-			if(ACCELERATION_ENABLE){
+			if(config.ACCELERATION_ENABLE){
 				
 				if(getAcceleration | getDataset){
 					getAcceleration = 0;
@@ -305,8 +318,7 @@ int main(void)
 //						acceleration_actual_float.z_Value = ACC_convertAccelToFloat(acceleration_actual.z_Value, 12, 2);
 						sensor_set[actualSet].acceleration = acceleration_actual;
 					}
-					// wenn Lesefehler dann blinken alle 3 mal
-					else{
+					else{																	/* wenn Lesefehler dann blinken alle 3 mal */
 						for(int i=0;i<3;i++){
 							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 							HAL_Delay(200);
@@ -318,41 +330,36 @@ int main(void)
 			}
 			
 			/* Einlesen der Positionsdaten und Ablage in den Datensatz -------------*/
-			if(GNSS_ENABLE){
+			if(config.GNSS_ENABLE){
 				if(getPosition | getDataset){
 					getPosition = 0;
 					getDataset--;
-					//check for new UART GPS Data, and read in before using GPS dataset
-					if(g_newGPSData){
-						// read in new data
-						GPS_sortInNewData(&gpsActualDataset, gpsRxRingBuffer);
-						g_newGPSData = 0; // reset flag	
+					if(g_newGPSData){											/* check for new UART GPS Data, and read in before using GPS dataset */
+						GPS_sortInNewData(&gpsActualDataset, gpsRxRingBuffer);		/* read in new data */
+						g_newGPSData = 0; 									/* reset flag	*/
 					}
-					// aus aktuellem GPS Set
+					/* aus aktuellem GPS Set */
 				//	strcpy(sensor_set[actualSet].NMEA_GPGGA, gpsActualDataset.NMEA_GPGGA);
 			  //	strcpy(sensor_set[actualSet].NMEA_GPRMC, gpsActualDataset.NMEA_GPRMC); // so wenn sensorSet zweimal char[80] enthält
 					sensor_set[actualSet].NMEA_GPRMC = gpsActualDataset.NMEA_GPRMC;
 					sensor_set[actualSet].NMEA_GPGGA = gpsActualDataset.NMEA_GPGGA;
-					sensor_set[actualSet].timestamp = clock_time; // von Timer incrementiert, kann aber auch noch von GPS ab und so korrigiert werden
+					sensor_set[actualSet].timestamp = clock_time;		/* von Timer incrementiert, kann aber auch noch von GPS ab und so korrigiert werden */
 				}
 			}
 			
 			actualSet++;
 		}
 		
-
 		
 		/* Fuellen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
 		if((actualSet == datasetCount) | writeDataset | (event == eject_card)) {
 			HAL_NVIC_DisableIRQ(TIM4_IRQn);
-			if(SDIO_ENABLE){
-				write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet, &cursor);
-			}
+			write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet, &cursor);
 			writeDataset = 0;
 			actualSet = 0;
 			if(event == eject_card){
 				HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
-				event = deactivate_gnss;               /* Deaktiviere GNSS-Modul vor dem Abschalten */
+				event = deactivate_gnss;               	/* Deaktiviere GNSS-Modul vor dem Abschalten */
 			}
 			else{
 				HAL_NVIC_EnableIRQ(TIM4_IRQn);
@@ -366,9 +373,6 @@ int main(void)
 				event = no_event;
 			}
 		}
-			
-		
-		//HAL_Delay(100);
   }
   /* USER CODE END 3 */
 
@@ -740,8 +744,8 @@ void Timer4_Init(void){
 void AnalogWDG_Init(void){
 	AnalogWDGConf.WatchdogMode = ADC_ANALOGWATCHDOG_ALL_REG;
 	AnalogWDGConf.Channel = ADC_ALL_CHANNELS;
-	AnalogWDGConf.HighThreshold = MAX_TEMP_RAW;
-	AnalogWDGConf.LowThreshold = MIN_TEMP_RAW;
+	AnalogWDGConf.HighThreshold = config.MAX_TEMP_RAW;
+	AnalogWDGConf.LowThreshold = config.MIN_TEMP_RAW;
 	AnalogWDGConf.ITMode = ENABLE;
 	
 	HAL_ADC_AnalogWDGConfig(&hadc1, &AnalogWDGConf);
@@ -775,29 +779,34 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc){
 	HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_SET);
 }
 
-void setPreferences(char* buff, UINT buffLength){
-	/*
-	char* token;
-    char* prefBuff;
-    char* trennzeichen = "= ;\n";
-    char* pref[2][16];
-    int   row = 0;
-    prefBuff     = strstr(buff, "enableAcc");
-    token         = strtok(prefBuff, trennzeichen);
-    
-    while(token != NULL && row < 16){
-      pref[0][row] = token;
-      token = strtok(NULL, trennzeichen);
-      pref[1][row] = token;
-      token = strtok(NULL, trennzeichen);
-      printf("%i: pref: %s --> value: %s\n", row, pref[0][row], pref[1][row]);
-      row++;
+static int Preferences_Handler(void* user, const char* section, const char* name, const char* value) {
+    configuration* pconfig = (configuration*)user;
+
+    #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
+    if (MATCH("functions", "ACCELERATION_ENABLE")) {
+        pconfig->ACCELERATION_ENABLE = atoi(value);
+    } else if (MATCH("functions", "GNSS_ENABLE")) {
+        pconfig->GNSS_ENABLE = atoi(value);
+		}	else if (MATCH("functions", "LIGHT_ENABLE")) {
+        pconfig->LIGHT_ENABLE = atoi(value);
+		} else if (MATCH("functions", "TEMP_ENABLE")) {
+        pconfig->TEMP_ENABLE = atoi(value);
+		} else if (MATCH("values", "ACC_MAX_ANZAHL_WERTE")) {
+        pconfig->ACC_MAX_ANZAHL_WERTE = atoi(value);
+    } else if (MATCH("values", "MIN_TEMP")) {
+        pconfig->MIN_TEMP = atoi(value);
+    } else if (MATCH("values", "MAX_TEMP")) {
+        pconfig->MAX_TEMP = atoi(value);
+    } else if (MATCH("values", "MAX_ACC")) {
+        pconfig->MAX_ACC = atoi(value);
+    } else {
+        return 0;  																						/* unknown section/name, error */
     }
-	*/
+    		
+		pconfig->MAX_TEMP_RAW = pconfig->MAX_TEMP * 4096 / 600;		/* Umrechnen der Werte von K in AD-Werte */
+	  pconfig->MIN_TEMP_RAW = pconfig->MIN_TEMP * 4096 / 600;		/* Umrechnen der Werte von K in AD-Werte */
 		
-		
-		MAX_TEMP_RAW = MAX_TEMP * 4096 / 600;
-	  MIN_TEMP_RAW = MIN_TEMP * 4096 / 600;
+		return 1;
 }
 /* USER CODE END 4 */
 

@@ -55,7 +55,7 @@
 #include "card_operations.h"
 #include "acceleration_Sensor.h"
 #include "gps_modul.h"
-#include "..\inih\ini.h"
+#include "ini.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -73,30 +73,13 @@ DMA_HandleTypeDef hdma_usart3_rx;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-uint8_t GET_DATA;														 		/* Initialisierungswert f�r das Sammeln eines kompletten Datensatzes */
-
-typedef struct
-{
-  uint16_t MAX_TEMP;
-	uint16_t MIN_TEMP;
-	uint16_t MAX_TEMP_RAW;												/* Oberer Schwellwert des Analog */
-	uint16_t MIN_TEMP_RAW;												/* Temperatur in K, UEBER der ein Interrupt ausgeloest wird */
-	uint16_t MAX_ACC;
-	uint8_t ACCELERATION_ENABLE;
-	uint8_t GNSS_ENABLE; 
-	uint8_t LIGHT_ENABLE;
-	uint8_t TEMP_ENABLE;
-	uint16_t ACC_MAX_ANZAHL_WERTE;
-} configuration;
+uint8_t GET_DATA;														 		/* Initialisierungswert fuer das Sammeln eines kompletten Datensatzes */
 
 configuration config;
 
 static int Preferences_Handler(void* user, const char* section, const char* name, const char* value);		/* Handler für Config-Parser */
 
-
-
-
-const uint16_t 	datasetCount = 100;							/* Anzahl der Datens�tze, die gesammelt auf die Karte geschrieben werden */
+const uint16_t 	datasetCount = 100;							/* Anzahl der Datensäetze, die gesammelt auf die Karte geschrieben werden */
 uint16_t				actualSet = 0;									/* Momentan aktiver Datensatz */
 ADC_AnalogWDGConfTypeDef AnalogWDGConf;
 
@@ -242,8 +225,8 @@ int main(void)
 	if(config.GNSS_ENABLE) {
 		config.GNSS_ENABLE = 0; 										/* erst mal deaktiveren, wenn GPS aktivierung erfolgreich wird es wieder ENABLED */
 		HAL_GPIO_WritePin(GPS_Reset_out_GPIO_Port, GPS_Reset_out_Pin, GPIO_PIN_SET);
-		for(int i = 0; i < 4; i++){												/* wenn nach 4 Versuchen, das Modul nicht aktivert werden kann, bleibt GNSS_ENABLE=0 und das Programm lauft "normal" weiter */
-				if(-1 != GPS_activateReceiver()){ 				/* GPS erfolgreich aktiviert, for-Schleife verlassen */
+		for(int i = 0; i < 4; i++){									/* wenn nach 4 Versuchen, das Modul nicht aktivert werden kann, bleibt GNSS_ENABLE=0 und das Programm lauft "normal" weiter */
+				if(-1 != GPS_activateReceiver()){ 			/* GPS erfolgreich aktiviert, for-Schleife verlassen */
 				config.GNSS_ENABLE=1;
 				i = 5;
 

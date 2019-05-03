@@ -443,7 +443,7 @@
             <File>
               <FileName>ini.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\inih\ini.c</FilePath>
+              <FilePath>..\Src\ini.c</FilePath>
             </File>
           </Files>
         </Group>

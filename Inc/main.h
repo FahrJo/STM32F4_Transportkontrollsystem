@@ -163,6 +163,19 @@ typedef enum {
 	eject_card,
 	deactivate_gnss
 } event_type;
+
+typedef struct {
+  uint16_t MAX_TEMP;
+	uint16_t MIN_TEMP;
+	uint16_t MAX_TEMP_RAW;												/* Oberer Schwellwert des Analog */
+	uint16_t MIN_TEMP_RAW;												/* Temperatur in K, UEBER der ein Interrupt ausgeloest wird */
+	uint16_t MAX_ACC;
+	uint8_t ACCELERATION_ENABLE;
+	uint8_t GNSS_ENABLE; 
+	uint8_t LIGHT_ENABLE;
+	uint8_t TEMP_ENABLE;
+	uint16_t ACC_MAX_ANZAHL_WERTE;
+} configuration;
 	
 	 
 /* USER CODE END Private defines */

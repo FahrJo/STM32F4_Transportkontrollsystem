@@ -55,7 +55,4 @@ HAL_StatusTypeDef ACC_getAllValues(I2C_HandleTypeDef *hi2c3, s_accelerometerValu
 
 float ACC_convertAccelToFloat(int16_t rohDaten, uint8_t breiteInBit, uint8_t messbereich);
 
-void ACC_incrementAdress(void);
-void ACC_setAdress(uint8_t);
-
 #endif

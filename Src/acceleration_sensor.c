@@ -1,9 +1,6 @@
 #include "acceleration_sensor.h"
 //#include "hilfsfunktionen.h"
 
-//uint8_t ACCELEROMETER_I2C_ADRESS = 0x0;
-uint8_t	 	adress[] = {0x1C, 0x1D, 0x38, 0x3A};
-uint8_t		adressCounter;
 
 /********************************************************************************
 ****************** I2C i2c_ *****************************************************
@@ -105,9 +102,6 @@ HAL_StatusTypeDef ACC_getAllValues(I2C_HandleTypeDef *i2cHandler, s_acceleromete
 	accValues->x_Value = zwischenbuffer[0] / 16;
 	accValues->y_Value = zwischenbuffer[1] / 16;
 	accValues->z_Value = zwischenbuffer[2] / 16;
-	//accValues->x_Value = (receiveBuffer[0]<<8 | receiveBuffer[1]) / 16;
-	//accValues->y_Value = (receiveBuffer[2]<<8 | receiveBuffer[3]) / 16;
-	//accValues->z_Value = (receiveBuffer[4]<<8 | receiveBuffer[5]) / 16;
 
 	return	HAL_OK;
 }
@@ -127,22 +121,3 @@ float ACC_convertAccelToFloat(int16_t rohDaten, uint8_t breiteInBit, uint8_t mes
 	
 	return accelerationFloat;
 }
-
-/*void ACC_incrementAdress(void){
-	ACCELEROMETER_I2C_ADRESS++;
-}
-
-void ACC_setAdress(uint8_t adress){
-	ACCELEROMETER_I2C_ADRESS = adress;
-}*/
-
-/*uint8_t ACC_Search(I2C_HandleTypeDef *i2cHandler){
-	while(ACC_activate(&i2cHandler) != HAL_OK){
-		adressCounter = (adressCounter < 4) ? adressCounter + 1 : 0;
-		ACC_setAdress(adress[adressCounter]);
-		i2c_status = ACC_activate(&i2cHandler);
-		HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin);
-		HAL_Delay(10);
-	}
-	return adress[adressCounter];
-}*/

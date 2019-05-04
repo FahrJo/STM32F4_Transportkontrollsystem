@@ -729,9 +729,9 @@ void AnalogWDG_Init(void){
 
 void error_blink(uint16_t GPIO_Pin, uint16_t n, uint16_t dt) {
 	for(int i = 0; i < n; i++) {
-		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LED3_GPIO_Port, GPIO_Pin, GPIO_PIN_SET);
 		HAL_Delay(dt);
-		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LED3_GPIO_Port, GPIO_Pin, GPIO_PIN_RESET);
 		HAL_Delay(dt);
 	}
 }

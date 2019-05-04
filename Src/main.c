@@ -718,6 +718,9 @@ void Timer4_Init(void){
 }
 
 void AnalogWDG_Init(void){
+	config.MAX_TEMP_RAW = config.MAX_TEMP * 4096 / 600;		/* Umrechnen der Werte von K in AD-Werte */
+	config.MIN_TEMP_RAW = config.MIN_TEMP * 4096 / 600;		/* Umrechnen der Werte von K in AD-Werte */
+	
 	AnalogWDGConf.WatchdogMode = ADC_ANALOGWATCHDOG_ALL_REG;
 	AnalogWDGConf.Channel = ADC_ALL_CHANNELS;
 	AnalogWDGConf.HighThreshold = config.MAX_TEMP_RAW;
@@ -791,9 +794,6 @@ static int Preferences_Handler(void* user, const char* section, const char* name
     } else {
         return 0;  																						/* unknown section/name, error */
     }
-    		
-		pconfig->MAX_TEMP_RAW = pconfig->MAX_TEMP * 4096 / 600;		/* Umrechnen der Werte von K in AD-Werte */
-	  pconfig->MIN_TEMP_RAW = pconfig->MIN_TEMP * 4096 / 600;		/* Umrechnen der Werte von K in AD-Werte */
 		
 		return 1;
 }

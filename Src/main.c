@@ -93,7 +93,7 @@ UINT 						configCursor;										/* Letztes Zeichen in CSV-Datei */
 char 						logFileName[] = "Log3.csv";
 char 						configFileName[] = "config.ini";
 char * 					configBuffer;
-char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n";
+char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;;\n Date/Time;Location (GPRMC);Location (GPGGA);Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n";
 uint32_t 				Temp_Raw;												/* Temperatur in 12 Bit aus ADC */
 uint16_t 				Temp;														/* Temperatur in �C */
 dataset 				sensor_set[datasetCount];				/* Datensatz, der im RAM gepuffert wird */
@@ -197,14 +197,14 @@ int main(void)
 			configBuffer = calloc((f_size(&configFile) + 2), sizeof(char));		/* Reserviert Speicherbereich für den String der ganzen Konfigurationsdatei */ 
 			f_read(&configFile, configBuffer, sizeof(configBuffer), &configCursor);		/* liest Konfigurationsdatei in den String für die folgende Auswertung */
 			if (ini_parse_string(configBuffer, Preferences_Handler, &config) < 0) {		/* wertet den String aus und setzt die entsprechenden Parameter */
-        error_blink(LED5_Pin, 5, 100);					/* wenn Lesefehler dann blinkt LED5 3 mal schnell */
+        error_blink(LED3_Pin, 5, 500);					/* wenn Lesefehler an config.ini dann blinkt LED3 5 mal lang */
 			}
 			free(configBuffer);												/* Gibt dynamisch reservierten Speicherbereich wieder frei */
 		}
 		write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor);
 	}
 	else{
-		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);		/* Orangene LED leuchtet dauerhaft, wenn SD-Karte  nicht initialisiert werden konnte */
+		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);		/* Orangene LED3 leuchtet dauerhaft, wenn SD-Karte  nicht initialisiert werden konnte */
 	}
 
 	Timer4_Init();
@@ -219,11 +219,12 @@ int main(void)
 		HAL_Delay(500);
 	}
 	
+	/* GPS-Empfänger aktivieren ------------------------------------------------*/
 	if(config.GNSS_ENABLE) {
 		config.GNSS_ENABLE = 0; 										/* erst mal deaktiveren, wenn GPS aktivierung erfolgreich wird es wieder ENABLED */
 		HAL_GPIO_WritePin(GPS_Reset_out_GPIO_Port, GPS_Reset_out_Pin, GPIO_PIN_SET);
 		for(int i = 0; i < 4; i++){									/* wenn nach 4 Versuchen, das Modul nicht aktivert werden kann, bleibt GNSS_ENABLE=0 und das Programm lauft "normal" weiter */
-				if(-1 != GPS_activateReceiver()){ 			/* GPS erfolgreich aktiviert, for-Schleife verlassen */
+			if(-1 != GPS_activateReceiver()){ 				/* GPS erfolgreich aktiviert, for-Schleife verlassen */
 				config.GNSS_ENABLE=1;
 				i = 5;
 
@@ -232,6 +233,9 @@ int main(void)
 				__HAL_UART_ENABLE_IT(&huart3, UART_IT_TC );
 				__HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE );
 			}
+			else{
+				error_blink(LED6_Pin, 5, 500);					/* wenn GPS nicht aktiviert werden kann blinkt LED6 (Blau) 5 mal lang */
+			}
 			HAL_Delay(100);
 		}
 	}
@@ -239,8 +243,8 @@ int main(void)
 	/* Starte ADC --------------------------------------------------------------*/
 	if(config.TEMP_ENABLE){
 		AnalogWDG_Init();														/* Analog Watchdog konfigurieren */
-		HAL_ADC_Start_DMA(&hadc1, &Temp_Raw, 1);
-		HAL_ADC_Start_IT(&hadc1);
+		HAL_ADC_Start_DMA(&hadc1, &Temp_Raw, 1);		/* ADC->Mem DMA starten */
+		HAL_ADC_Start_IT(&hadc1);										/* ADC-WDG Interrupt aktivieren */
 	}
 	
 	GET_DATA = config.ACCELERATION_ENABLE + config.GNSS_ENABLE + config.LIGHT_ENABLE + config.TEMP_ENABLE;		/* initialisiere Counter zum sammeln eines Datensatzes */
@@ -300,7 +304,7 @@ int main(void)
 						sensor_set[actualSet].acceleration = acceleration_actual;
 					}
 					else{																	
-						error_blink(LED3_Pin, 3, 200);			/* wenn Lesefehler dann blinkt LED3 3 mal */
+						error_blink(LED5_Pin, 3, 100);			/* wenn Lesefehler dann blinkt LED5 3 mal kurz */
 					}
 				}
 			}
@@ -708,16 +712,19 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void Timer4_Init(void){
-	RCC->APB1ENR |= (1<<2); 					// APB: Advanced Perifery Bridge
-	TIM4->PSC = 4200-1;								// Prescaler f�r Timer 4
-	TIM4->ARR = 20000-1;							// Autoreload Limit
+	RCC->APB1ENR |= (1<<2); 											/* APB: Advanced Perifery Bridge */
+	TIM4->PSC = 4200-1;														/* Prescaler fuer Timer 4 */
+	TIM4->ARR = 20000-1;													/* Autoreload Limit */
 	
-	TIM4->DIER |= 0x1;								// Enable Timer 4 for set an Interrupt
-	NVIC_EnableIRQ(TIM4_IRQn);				// Enable Interrupt f�r Timer 4
-	TIM4->CR1 |= 0x1;									// Konfig-Register f�r Timer 4 / Channel 1
+	TIM4->DIER |= 0x1;														/* Enable Timer 4 for set an Interrupt */
+	NVIC_EnableIRQ(TIM4_IRQn);										/* Enable Interrupt fuer Timer 4 */
+	TIM4->CR1 |= 0x1;															/* Konfig-Register fuer Timer 4 / Channel 1 */
 }
 
 void AnalogWDG_Init(void){
+	config.MAX_TEMP_RAW = config.MAX_TEMP * 4096 / 600;		/* Umrechnen der Werte von K in AD-Werte */
+	config.MIN_TEMP_RAW = config.MIN_TEMP * 4096 / 600;		/* Umrechnen der Werte von K in AD-Werte */
+	
 	AnalogWDGConf.WatchdogMode = ADC_ANALOGWATCHDOG_ALL_REG;
 	AnalogWDGConf.Channel = ADC_ALL_CHANNELS;
 	AnalogWDGConf.HighThreshold = config.MAX_TEMP_RAW;
@@ -727,11 +734,11 @@ void AnalogWDG_Init(void){
 	HAL_ADC_AnalogWDGConfig(&hadc1, &AnalogWDGConf);
 }
 
-void error_blink(uint16_t GPIO_Pin, uint16_t n, uint16_t dt) {
+void error_blink(uint16_t GPIO_Pin, uint16_t n, uint16_t dt) {		/* GPIO_Pin: Pin, n: Anzahl der Impulse, dt: Dauer der Impulse */
 	for(int i = 0; i < n; i++) {
-		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LED3_GPIO_Port, GPIO_Pin, GPIO_PIN_SET);
 		HAL_Delay(dt);
-		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LED3_GPIO_Port, GPIO_Pin, GPIO_PIN_RESET);
 		HAL_Delay(dt);
 	}
 }
@@ -789,11 +796,8 @@ static int Preferences_Handler(void* user, const char* section, const char* name
     } else if (MATCH("values", "MAX_ACC")) {
         pconfig->MAX_ACC = atoi(value);
     } else {
-        return 0;  																						/* unknown section/name, error */
+        return 0;  															/* unknown section/name, error */
     }
-    		
-		pconfig->MAX_TEMP_RAW = pconfig->MAX_TEMP * 4096 / 600;		/* Umrechnen der Werte von K in AD-Werte */
-	  pconfig->MIN_TEMP_RAW = pconfig->MIN_TEMP * 4096 / 600;		/* Umrechnen der Werte von K in AD-Werte */
 		
 		return 1;
 }

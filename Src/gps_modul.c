@@ -114,6 +114,7 @@ int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
 				else {} // nop; einen anderen Sentences gefunden, buffer enthält aber mehrere also weitersuchen
 		} // ende if der '$' suche
 		if(gpsTypFound==0x3) return 0; // abbruch wenn beide NMEA mindestens einmal gefunden wurden
+		cursor++;
 	} // ende while der '$' suche
 	
 	// string enthielt nicht beide Sätze vollständig

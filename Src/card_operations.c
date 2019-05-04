@@ -4,7 +4,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 FRESULT return_value;
-char dataset_string[128];
+char dataset_string[512];
 char buffer_string[64];
 BYTE mode0 = FA_WRITE | FA_CREATE_ALWAYS;
 BYTE mode = FA_WRITE | FA_OPEN_APPEND;

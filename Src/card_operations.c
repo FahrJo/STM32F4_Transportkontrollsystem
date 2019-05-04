@@ -67,6 +67,7 @@ void convert_dataset_to_string(dataset* dataset_p, char* dataset_string){
 	}
 	sprintf(dataset_string, "%i-%i-%i-%i:%i:%i;", dataset_p->timestamp.tm_year, dataset_p->timestamp.tm_mon, dataset_p->timestamp.tm_mday, dataset_p->timestamp.tm_hour, dataset_p->timestamp.tm_min, dataset_p->timestamp.tm_sec);
 	strcat(dataset_string, dataset_p->NMEA_GPGGA);
+	strcat(dataset_string, ";");
 	strcat(dataset_string, dataset_p->NMEA_GPRMC);
 	sprintf(buffer_string, ";%i;%i;%i;", dataset_p->acceleration.x_Value, dataset_p->acceleration.y_Value, dataset_p->acceleration.z_Value);
 	strcat(dataset_string, buffer_string);

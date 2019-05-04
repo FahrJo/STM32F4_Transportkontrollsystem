@@ -92,7 +92,7 @@ UINT 						cursor;													/* Letztes Zeichen in CSV-Datei */
 UINT 						configCursor;										/* Letztes Zeichen in CSV-Datei */
 char 						logFileName[] = "Log3.csv";
 char 						configFileName[] = "config.ini";
-char	 					configBuffer[1024];
+char * 					configBuffer;
 char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;\n Date/Time;Location;Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n";
 uint32_t 				Temp_Raw;												/* Temperatur in 12 Bit aus ADC */
 uint16_t 				Temp;														/* Temperatur in �C */
@@ -130,6 +130,7 @@ static void MX_USART3_UART_Init(void);
 /* Private function prototypes -----------------------------------------------*/
 void Timer4_Init(void);
 void AnalogWDG_Init(void);
+void error_blink(uint16_t GPIO_Pin, uint16_t n, uint16_t dt);
 
 /* USER CODE END PFP */
 
@@ -193,26 +194,22 @@ int main(void)
 	/* Vorbereiten der SD-Karte ------------------------------------------------*/
 	if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
 		if(f_open(&configFile, configFileName, FA_READ | FA_OPEN_EXISTING) == FR_OK){
-			f_read(&configFile, configBuffer, sizeof(configBuffer), &configCursor);
-			if (ini_parse_string(configBuffer, Preferences_Handler, &config) < 0) {
-        for(int i=0;i<3;i++){										/* wenn Lesefehler dann blinken alle 3 mal */
-					HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-					HAL_Delay(200);
-					HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
-					HAL_Delay(200);
-				}
+			configBuffer = calloc((f_size(&configFile) + 2), sizeof(char));		/* Reserviert Speicherbereich für den String der ganzen Konfigurationsdatei */ 
+			f_read(&configFile, configBuffer, sizeof(configBuffer), &configCursor);		/* liest Konfigurationsdatei in den String für die folgende Auswertung */
+			if (ini_parse_string(configBuffer, Preferences_Handler, &config) < 0) {		/* wertet den String aus und setzt die entsprechenden Parameter */
+        error_blink(LED5_Pin, 5, 100);					/* wenn Lesefehler dann blinkt LED5 3 mal schnell */
 			}
+			free(configBuffer);												/* Gibt dynamisch reservierten Speicherbereich wieder frei */
 		}
 		write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor);
 	}
 	else{
-		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);		/* Orangene LED leuchtet dauerhaft, wenn SD-Karte  nicht initialisiert werden konnte */
 	}
 
 	Timer4_Init();
-	AnalogWDG_Init();
 	
-	
+		
 	/* Acc-Sensor ueber I2C deaktivieren und dann wieder aktivieren, damit dieser sicher aktiviert wird */
 	if(config.ACCELERATION_ENABLE){
 		HAL_Delay(500);
@@ -230,7 +227,7 @@ int main(void)
 				config.GNSS_ENABLE=1;
 				i = 5;
 
-				/* Starte GPS UART DMA -----------------------------------------------------*/
+				/* Starte GPS UART DMA */
 				HAL_UART_Receive_DMA(&huart3, (uint8_t*)&gpsRxRingBuffer, GPS_RINGBUFFER_SIZE);
 				__HAL_UART_ENABLE_IT(&huart3, UART_IT_TC );
 				__HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE );
@@ -241,6 +238,7 @@ int main(void)
 
 	/* Starte ADC --------------------------------------------------------------*/
 	if(config.TEMP_ENABLE){
+		AnalogWDG_Init();														/* Analog Watchdog konfigurieren */
 		HAL_ADC_Start_DMA(&hadc1, &Temp_Raw, 1);
 		HAL_ADC_Start_IT(&hadc1);
 	}
@@ -282,7 +280,7 @@ int main(void)
 					getTemp = 0;
 					getDataset--;
 					
-					sensor_set[actualSet].temperature = 300 * 2 * Temp_Raw / 4096 - 273;    /* Umrechnung der 12-Bit Rohdaten in �C */
+					sensor_set[actualSet].temperature = 300 * 2 * Temp_Raw / 4096 - 273;    /* Umrechnung der 12-Bit Rohdaten in Grad Celsius */
 					Temp = sensor_set[actualSet].temperature;
 				}
 			}
@@ -301,13 +299,8 @@ int main(void)
 //						acceleration_actual_float.z_Value = ACC_convertAccelToFloat(acceleration_actual.z_Value, 12, 2);
 						sensor_set[actualSet].acceleration = acceleration_actual;
 					}
-					else{																	/* wenn Lesefehler dann blinken alle 3 mal */
-						for(int i=0;i<3;i++){
-							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-							HAL_Delay(200);
-							HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
-							HAL_Delay(200);
-						}
+					else{																	
+						error_blink(LED3_Pin, 3, 200);			/* wenn Lesefehler dann blinkt LED3 3 mal */
 					}
 				}
 			}
@@ -336,23 +329,23 @@ int main(void)
 		
 		/* Fuellen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
 		if((actualSet == datasetCount) | writeDataset | (event == eject_card)) {
-			HAL_NVIC_DisableIRQ(TIM4_IRQn);
-			write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet, &cursor);
+			HAL_NVIC_DisableIRQ(TIM4_IRQn);						/* Deaktiviere zyklischen Timer Interrupt um SD-Zugriff nicht zu unterbrechen */
+			write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet, &cursor);		/* Schreibe Datensatz auf die Speicherkarte */
 			writeDataset = 0;
 			actualSet = 0;
-			if(event == eject_card){
-				HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);
+			if(event == eject_card){									/* SD-Karte auswerfen */
+				HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);		/* Grüne LED leuchtet auf, sobald der SD-Karte entnommen werden kann */
 				event = deactivate_gnss;               	/* Deaktiviere GNSS-Modul vor dem Abschalten */
 			}
 			else{
-				HAL_NVIC_EnableIRQ(TIM4_IRQn);
+				HAL_NVIC_EnableIRQ(TIM4_IRQn);					/* Reaktiviere zyklischen Timer Interrupt */
 			}
 		}
 		
 		/* Deaktivieren des GNSS-Moduls -------------------------------------------*/
 		if(event == deactivate_gnss) {
 			if(GPS_deactivateReceiver() != -1) {
-				HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);			/* Blaue LED leuchtet auf, sobald der GPS-Sensor sicher abgeschaltet ist */
 				event = no_event;
 			}
 		}
@@ -734,6 +727,18 @@ void AnalogWDG_Init(void){
 	HAL_ADC_AnalogWDGConfig(&hadc1, &AnalogWDGConf);
 }
 
+void error_blink(uint16_t GPIO_Pin, uint16_t n, uint16_t dt) {
+	for(int i = 0; i < n; i++) {
+		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+		HAL_Delay(dt);
+		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+		HAL_Delay(dt);
+	}
+}
+
+
+/* Interrupt Handler (ISR) ---------------------------------------------------*/
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	operation_mode = workmode_log;
 	if(GPIO_Pin == User_Button_Pin){
@@ -747,20 +752,21 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	}
 }
 
-void TIM4_IRQHandler(){							// Interrupt Handler (ISR)
+void TIM4_IRQHandler() {												
 	TIM4->SR &=~ (0x1);
-	if(operation_mode == workmode_log){
-		//HAL_GPIO_TogglePin(LED5_GPIO_Port, LED5_Pin);
+	if(operation_mode == workmode_log) {
 		clock_time.tm_sec++;
 		getDataset = GET_DATA;
 	}
 }
 
-void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc){
+void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc) {		
 	operation_mode = workmode_log;
 	event = temp_event;
 	HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_SET);
 }
+
+/* INIH Handler --------------------------------------------------------------*/
 
 static int Preferences_Handler(void* user, const char* section, const char* name, const char* value) {
     configuration* pconfig = (configuration*)user;

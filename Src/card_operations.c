@@ -69,7 +69,7 @@ void convert_dataset_to_string(dataset* dataset_p, char* dataset_string){
 	strcat(dataset_string, dataset_p->NMEA_GPGGA);
 	strcat(dataset_string, ";");
 	strcat(dataset_string, dataset_p->NMEA_GPRMC);
-	sprintf(buffer_string, ";%i;%i;%i;", dataset_p->acceleration.x_Value, dataset_p->acceleration.y_Value, dataset_p->acceleration.z_Value);
+	sprintf(buffer_string, ";%f;%f;%f;", dataset_p->acceleration.x_Value, dataset_p->acceleration.y_Value, dataset_p->acceleration.z_Value);
 	strcat(dataset_string, buffer_string);
 	sprintf(buffer_string, "%i;", dataset_p->temperature);
 	strcat(dataset_string, buffer_string);

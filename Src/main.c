@@ -86,22 +86,23 @@ ADC_AnalogWDGConfTypeDef AnalogWDGConf;
 struct tm				clock_time;
 
 FATFS 					myFatFS;
-FIL 						logFile;												/* Dateihandle auf SD-Karte */
-FIL 						configFile;											/* Dateihandle auf SD-Karte */
-UINT 						cursor;													/* Letztes Zeichen in CSV-Datei */
-UINT 						configCursor;										/* Letztes Zeichen in CSV-Datei */
+FIL 						logFile;												/* Dateihandle auf SD-Karte (Log-Datei) */
+FIL 						configFile;											/* Dateihandle auf SD-Karte (Initialisierungsdatei)*/
+UINT 						cursor;													/* Letztes Zeichen in CSV-Datei (Log-Datei) */
+UINT 						configCursor;										/* Letztes Zeichen in CSV-Datei Initialisierungsdatei) */
 char 						logFileName[] = "Log3.csv";
 char 						configFileName[] = "config.ini";
 char * 					configBuffer;
 char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;;\n Date/Time;Location (GPRMC);Location (GPGGA);Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n";
 uint32_t 				Temp_Raw;												/* Temperatur in 12 Bit aus ADC */
-uint16_t 				Temp;														/* Temperatur in �C */
+uint16_t 				Temp;														/* Temperatur in Grad Celsius */
 dataset 				sensor_set[datasetCount];				/* Datensatz, der im RAM gepuffert wird */
 workmode_type 	operation_mode = workmode_log;	/* Betriebsmodus (Energiespar-Funktion) */
-event_type 			event;													/* Event f�r die Detektierung einer Grenzwert�berschreitung */
+event_type 			event;													/* Event fuer die Detektierung einer Grenzwertueberschreitung */
 
 s_accelerometerValues 			acceleration_actual_global;
 s_accelerometerValuesFloat 	acceleration_actual_float;
+float 											max_acceleration = 2.0;					/* Messbereich (+/-) in g */
 
 uint8_t					g_newGPSData = 0;								/* Flag wenn neue Daten im Buffer anstehen wird von DMA IR-Handler gesetzt */
 s_gpsSetOfData  gpsActualDataset;								/* Set mit aktuellsten GPS Daten */
@@ -298,10 +299,10 @@ int main(void)
 					
 					i2c_status = ACC_getAllValues(&hi2c3, &acceleration_actual);
 					if(i2c_status == HAL_OK){
-//						acceleration_actual_float.x_Value = ACC_convertAccelToFloat(acceleration_actual.x_Value, 12, 2);
-//						acceleration_actual_float.y_Value = ACC_convertAccelToFloat(acceleration_actual.y_Value, 12, 2);
-//						acceleration_actual_float.z_Value = ACC_convertAccelToFloat(acceleration_actual.z_Value, 12, 2);
-						sensor_set[actualSet].acceleration = acceleration_actual;
+						acceleration_actual_float.x_Value = ACC_convertAccelToFloat(acceleration_actual.x_Value, 12, max_acceleration);		/* Umrechnung in Float über Registerbreite und Messbereich in g */
+						acceleration_actual_float.y_Value = ACC_convertAccelToFloat(acceleration_actual.y_Value, 12, max_acceleration);		/* Umrechnung in Float über Registerbreite und Messbereich in g */
+						acceleration_actual_float.z_Value = ACC_convertAccelToFloat(acceleration_actual.z_Value, 12, max_acceleration);		/* Umrechnung in Float über Registerbreite und Messbereich in g */
+						sensor_set[actualSet].acceleration = acceleration_actual_float;
 					}
 					else{																	
 						error_blink(LED5_Pin, 3, 100);			/* wenn Lesefehler dann blinkt LED5 3 mal kurz */

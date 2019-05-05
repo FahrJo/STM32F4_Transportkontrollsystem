@@ -158,7 +158,8 @@ typedef enum {
 typedef enum {
 	no_event = 0,
 	open_event,
-	vibration_event,
+	moving_event,
+	hit_event,
 	temp_event,
 	eject_card,
 	deactivate_gnss

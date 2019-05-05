@@ -90,13 +90,17 @@ FIL 						logFile;												/* Dateihandle auf SD-Karte (Log-Datei) */
 FIL 						configFile;											/* Dateihandle auf SD-Karte (Initialisierungsdatei)*/
 UINT 						cursor;													/* Letztes Zeichen in CSV-Datei (Log-Datei) */
 UINT 						configCursor;										/* Letztes Zeichen in CSV-Datei Initialisierungsdatei) */
-char 						logFileName[] = "Log3.csv";
+char 						logFileName[] = "LogFile.csv";
 char 						configFileName[] = "config.ini";
 char * 					configBuffer;
-char 						header[] = "Tracking-Log vom 17.01.2019;;;;;;;\n Date/Time;Location (GPRMC);Location (GPGGA);Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n";
+char 						header[200];
 uint32_t 				Temp_Raw;												/* Temperatur in 12 Bit aus ADC */
 uint16_t 				Temp;														/* Temperatur in Grad Celsius */
 dataset 				sensor_set[datasetCount];				/* Datensatz, der im RAM gepuffert wird */
+
+/* Flags und Wartezeiten für den Sleep Mode */
+uint16_t				sleepTimer;
+uint16_t				activeTime = 300;								/* Zeit in Sekunden nach einem Ereigniss für den Sleep Mode (max 65.536 s) */
 workmode_type 	operation_mode = workmode_log;	/* Betriebsmodus (Energiespar-Funktion) */
 event_type 			event;													/* Event fuer die Detektierung einer Grenzwertueberschreitung */
 
@@ -107,13 +111,14 @@ float 											max_acceleration = 2.0;					/* Messbereich (+/-) in g */
 uint8_t					g_newGPSData = 0;								/* Flag wenn neue Daten im Buffer anstehen wird von DMA IR-Handler gesetzt */
 s_gpsSetOfData  gpsActualDataset;								/* Set mit aktuellsten GPS Daten */
 
-/* Trigger-Flags f�r das Einlesen von Daten */
+/* Trigger-Flags fuer das Einlesen von Daten */
 uint8_t 				getDataset;
 uint8_t 				getTemp;
 uint8_t					getLight;
 uint8_t					getAcceleration;
 uint8_t					getPosition;
 uint8_t					writeDataset;
+
 
 /* USER CODE END PV */
 
@@ -132,6 +137,7 @@ static void MX_USART3_UART_Init(void);
 void Timer4_Init(void);
 void AnalogWDG_Init(void);
 void error_blink(uint16_t GPIO_Pin, uint16_t n, uint16_t dt);
+void writeToFile(void);
 
 /* USER CODE END PFP */
 
@@ -202,6 +208,7 @@ int main(void)
 			}
 			free(configBuffer);												/* Gibt dynamisch reservierten Speicherbereich wieder frei */
 		}
+		sprintf(header, "Tracking-Log;t_min:;%i;t_max:;%i;Acc_max:;%i;\n Date/Time;Location (GPRMC);Location (GPGGA);Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n", config.MIN_TEMP, config.MAX_TEMP, config.MAX_ACC);
 		write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor);
 	}
 	else{
@@ -329,22 +336,19 @@ int main(void)
 			}
 			
 			actualSet++;
+		}		
+		
+		/* Fuellen des Datensatzes und Abspeichern auf die SD-Karte --------------*/
+		if((actualSet == datasetCount) | writeDataset) {
+			writeToFile();
 		}
 		
-		
-		/* Fuellen des Datensatzes und Abspeichern auf die SD-Karte ---------------*/
-		if((actualSet == datasetCount) | writeDataset | (event == eject_card)) {
-			HAL_NVIC_DisableIRQ(TIM4_IRQn);						/* Deaktiviere zyklischen Timer Interrupt um SD-Zugriff nicht zu unterbrechen */
-			write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet, &cursor);		/* Schreibe Datensatz auf die Speicherkarte */
-			writeDataset = 0;
-			actualSet = 0;
-			if(event == eject_card){									/* SD-Karte auswerfen */
-				HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);		/* Grüne LED leuchtet auf, sobald der SD-Karte entnommen werden kann */
-				event = deactivate_gnss;               	/* Deaktiviere GNSS-Modul vor dem Abschalten */
-			}
-			else{
-				HAL_NVIC_EnableIRQ(TIM4_IRQn);					/* Reaktiviere zyklischen Timer Interrupt */
-			}
+		/* SD-Karte auswerfen ----------------------------------------------------*/
+		if(event == eject_card){										
+			writeToFile();														/* letzten Datensatz auf Karte speichern */
+			HAL_NVIC_DisableIRQ(TIM4_IRQn);						/* Deaktiviere zyklischen Timer Interrupt um Logging zu unterbrechen */
+			HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET);		/* Grüne LED leuchtet auf, sobald der SD-Karte entnommen werden kann */
+			event = deactivate_gnss;               		/* Deaktiviere GNSS-Modul vor dem Abschalten */
 		}
 		
 		/* Deaktivieren des GNSS-Moduls -------------------------------------------*/
@@ -353,6 +357,14 @@ int main(void)
 				HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, GPIO_PIN_SET);			/* Blaue LED leuchtet auf, sobald der GPS-Sensor sicher abgeschaltet ist */
 				event = no_event;
 			}
+		}
+		
+		/* Sleep Mode nach x Minuten ohne Ereigniss/Interrupt --------------------*/
+		if(operation_mode == workmode_sleep) {
+			writeToFile();
+			HAL_SuspendTick();
+			HAL_PWR_EnterSLEEPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+			HAL_ResumeTick();
 		}
   }
   /* USER CODE END 3 */
@@ -744,34 +756,63 @@ void error_blink(uint16_t GPIO_Pin, uint16_t n, uint16_t dt) {		/* GPIO_Pin: Pin
 	}
 }
 
+void writeToFile(void) {
+	HAL_NVIC_DisableIRQ(TIM4_IRQn);								/* Deaktiviere zyklischen Timer Interrupt um SD-Zugriff nicht zu unterbrechen */
+	write_dataset_to_file(&logFile, logFileName, sensor_set, actualSet, &cursor);		/* Schreibe Datensatz auf die Speicherkarte */
+	writeDataset = 0;
+	actualSet = 0;
+	HAL_NVIC_EnableIRQ(TIM4_IRQn);								/* Reaktiviere zyklischen Timer Interrupt */
+}
+
 
 /* Interrupt Handler (ISR) ---------------------------------------------------*/
 
+/* GPIO Interrupt Handler */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	operation_mode = workmode_log;
+	operation_mode = workmode_log;								/* Ändern des Betriebsmodus in Log-Modus */
+	sleepTimer = 0;																/* Zurücksetzen des Sleep-Timers bei neuem Interrupt */
 	if(GPIO_Pin == User_Button_Pin){
 		event = eject_card;
-	}
-	else if(GPIO_Pin == INT_Photodiode_Pin){
+	}	else if(GPIO_Pin == INT_Photodiode_Pin){
 		event = open_event;
-	}
-	else if(GPIO_Pin == INT_Acceleration_Pin){
-		event = vibration_event;
+	}	else if(GPIO_Pin == INT_Acceleration_Pin){
+		event = moving_event;
+	}	else if(GPIO_Pin == INT_Acceleration2_Pin){
+		event = hit_event;
 	}
 }
 
+/* Analog Watchdog Interrupt Handler */
+void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc) {		
+	operation_mode = workmode_log;								/* Ändern des Betriebsmodus in Log-Modus */
+	sleepTimer = 0;																/* Zurücksetzen des Sleep-Timers bei neuem Interrupt */
+	event = temp_event;
+	HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_SET);		/* Aktivieren der roten LED als Indikator */
+}
+
+/* Zyklischer Timer interrupt im Sekundentakt */
 void TIM4_IRQHandler() {												
 	TIM4->SR &=~ (0x1);
-	if(operation_mode == workmode_log) {
-		clock_time.tm_sec++;
-		getDataset = GET_DATA;
+	if(++sleepTimer == activeTime) {							/* Ändern des Betriebsmodus nach voreingestelter Zeit ohne Interrupt */
+		operation_mode = workmode_sleep;						/* Ändern des Betriebsmodus in Ruhemodus */
+		sleepTimer = 0;
 	}
-}
-
-void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc) {		
-	operation_mode = workmode_log;
-	event = temp_event;
-	HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_SET);
+	if(operation_mode == workmode_log) {					/* Routine zum hochzählen der Zeit im Sekundentakt. Diese muss jedoch zu Beginn bzw. nach jedem Ruhezustand einmalig vom GPS-Signal aktualisiert werden. TODO! */
+		getDataset = GET_DATA;
+		if(++clock_time.tm_sec == 60) {
+			clock_time.tm_sec = 0;
+			if(++clock_time.tm_min == 60) {
+				clock_time.tm_min = 0;
+				if(++clock_time.tm_hour == 24) {
+					clock_time.tm_hour = 0;
+					if(++clock_time.tm_yday == 365) {
+						clock_time.tm_yday = 0;
+						++clock_time.tm_year;
+					}
+				}
+			}
+		}
+	}
 }
 
 /* INIH Handler --------------------------------------------------------------*/

@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include "hilfsfunktionen.h"
 
-#define GPS_RINGBUFFER_SIZE 500
+#define GPS_RINGBUFFER_SIZE 700
 #define GPGGA_ANZAHL_KOMMA 14
 #define GPRMC_ANZAHL_KOMMA 11
 

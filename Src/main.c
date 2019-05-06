@@ -334,6 +334,7 @@ int main(void)
 			  //	strcpy(sensor_set[actualSet].NMEA_GPRMC, gpsActualDataset.NMEA_GPRMC); // so wenn sensorSet zweimal char[80] enthält
 					sensor_set[actualSet].NMEA_GPRMC = gpsActualDataset.NMEA_GPRMC;
 					sensor_set[actualSet].NMEA_GPGGA = gpsActualDataset.NMEA_GPGGA;
+					// read in new time from GPS only when GPS Timestamp is newer than old timestamp form GPS. Else we jump back in time (bc. Time get incremented intern) 
 					sensor_set[actualSet].timestamp = clock_time;		/* von Timer incrementiert, kann aber auch noch von GPS ab und so korrigiert werden */
 				}
 			}

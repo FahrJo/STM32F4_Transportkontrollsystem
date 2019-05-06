@@ -322,8 +322,11 @@ int main(void)
 				if(getPosition | getDataset){
 					getPosition = 0;
 					getDataset--;
-					if(g_newGPSData){											/* check for new UART GPS Data, and read in before using GPS dataset */
+					g_newGPSData = 1; // always read in. TODO: this is a workaround as long the DMA-IRQ does not do what it should
+					if(g_newGPSData){					/* check for new UART GPS Data, and read in before using GPS dataset */
+						HAL_UART_DMAPause(&huart3); //pause DMA um Datenkonstistenz zu gewährleisten
 						GPS_sortInNewData(&gpsActualDataset, gpsRxRingBuffer);		/* read in new data */
+						HAL_UART_DMAResume(&huart3);
 						g_newGPSData = 0; 									/* reset flag	*/
 					}
 					/* aus aktuellem GPS Set */

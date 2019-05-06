@@ -157,7 +157,7 @@ int main(void)
 	/* Standartwerte */
 	config.MAX_TEMP 						= 333;
 	config.MIN_TEMP 						= 263;
-	config.MAX_ACC 							= 4;
+	config.MAX_ACC 							= 2;
 	config.ACCELERATION_ENABLE 	= 1;
 	config.GNSS_ENABLE					= 1; 
 	config.LIGHT_ENABLE					= 1;
@@ -204,11 +204,11 @@ int main(void)
 			configBuffer = calloc((f_size(&configFile) + 2), sizeof(char));		/* Reserviert Speicherbereich für den String der ganzen Konfigurationsdatei */ 
 			f_read(&configFile, configBuffer, sizeof(configBuffer), &configCursor);		/* liest Konfigurationsdatei in den String für die folgende Auswertung */
 			if (ini_parse_string(configBuffer, Preferences_Handler, &config) < 0) {		/* wertet den String aus und setzt die entsprechenden Parameter */
-        error_blink(LED3_Pin, 5, 500);					/* wenn Lesefehler an config.ini dann blinkt LED3 5 mal lang */
+        error_blink(LED3_Pin, 5, 500);					/* wenn Lesefehler an config.ini dann blinkt orangene LED3 5 mal lang */
 			}
 			free(configBuffer);												/* Gibt dynamisch reservierten Speicherbereich wieder frei */
 		}
-		sprintf(header, "Tracking-Log;t_min:;%i;t_max:;%i;Acc_max:;%i;\n Date/Time;Location (GPRMC);Location (GPGGA);Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n", config.MIN_TEMP, config.MAX_TEMP, config.MAX_ACC);
+		sprintf(header, "Tracking-Log;t_min:;%i;t_max:;%i;Acc_max:;%1f;\n Date/Time;Location (GPRMC);Location (GPGGA);Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n", config.MIN_TEMP, config.MAX_TEMP, config.MAX_ACC);
 		write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor);
 	}
 	else{
@@ -241,7 +241,7 @@ int main(void)
 				__HAL_UART_ENABLE_IT(&huart3, UART_IT_TC );
 				__HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE );
 			}
-			else{
+			else if(i == 4){
 				error_blink(LED6_Pin, 5, 500);					/* wenn GPS nicht aktiviert werden kann blinkt LED6 (Blau) 5 mal lang */
 			}
 			HAL_Delay(100);
@@ -250,7 +250,7 @@ int main(void)
 
 	/* Starte ADC --------------------------------------------------------------*/
 	if(config.TEMP_ENABLE){
-		AnalogWDG_Init();														/* Analog Watchdog konfigurieren */
+		//AnalogWDG_Init();														/* Analog Watchdog konfigurieren */
 		HAL_ADC_Start_DMA(&hadc1, &Temp_Raw, 1);		/* ADC->Mem DMA starten */
 		HAL_ADC_Start_IT(&hadc1);										/* ADC-WDG Interrupt aktivieren */
 	}
@@ -361,10 +361,14 @@ int main(void)
 		
 		/* Sleep Mode nach x Minuten ohne Ereigniss/Interrupt --------------------*/
 		if(operation_mode == workmode_sleep) {
+			GPS_deactivateReceiver();
 			writeToFile();
+			HAL_NVIC_DisableIRQ(TIM4_IRQn);
 			HAL_SuspendTick();
 			HAL_PWR_EnterSLEEPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 			HAL_ResumeTick();
+			HAL_NVIC_EnableIRQ(TIM4_IRQn);
+			GPS_activateReceiver();
 		}
   }
   /* USER CODE END 3 */
@@ -836,7 +840,7 @@ static int Preferences_Handler(void* user, const char* section, const char* name
     } else if (MATCH("values", "MAX_TEMP")) {
         pconfig->MAX_TEMP = atoi(value);
     } else if (MATCH("values", "MAX_ACC")) {
-        pconfig->MAX_ACC = atoi(value);
+        pconfig->MAX_ACC = atof(value);
     } else {
         return 0;  															/* unknown section/name, error */
     }

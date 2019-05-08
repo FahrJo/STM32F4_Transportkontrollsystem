@@ -327,7 +327,7 @@ int main(void)
 						HAL_UART_DMAResume(&huart3);
 						// read in new time from GPS only when GPS Timestamp is newer than old timestamp from GPS. Else we jump back in time (bc. Time get incremented intern) 
 						// TODO: add gps parse time in this struct -> then incomment the next line						
-						//if(returnValue==0) clock_time = gpsActualDataset.gps_timestamp; // check if this is ok, or only copy a pointer
+						//if(returnValue!=-1) clock_time = gpsActualDataset.gps_timestamp; // check if this is ok, or only copy a pointer
 						g_newGPSData = 0; 									/* reset flag	*/
 					}
 					/* aus aktuellem GPS Set Position immer kopieren, weil da ist es besser die letzte zu haben als keine*/

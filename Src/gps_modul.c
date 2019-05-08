@@ -92,6 +92,7 @@ int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
 					}
 					gpsActualDataset->NMEA_GPRMC[copyindex] = '\0'; // stringende ans Ende.  Eigentlich könnte zwischen Text und \0 ein <CR><LF> bzw \r\n wird aber formatierung in CSV
 					if(kommaZaehlerValidierung == GPRMC_ANZAHL_KOMMA){
+						pNewNmeaString[cursor]='X'; // overwrite $ of this sentence, so this string got not read in multiple times
 						gpsTypFound |= 0x1; //erfolgreich GPRMC eingelesen
 					}
 				}
@@ -110,20 +111,27 @@ int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
 					}
 					gpsActualDataset->NMEA_GPGGA[copyindex] = '\0'; // stringende ans Ende
 					if(kommaZaehlerValidierung == GPGGA_ANZAHL_KOMMA){
+						pNewNmeaString[cursor]='X'; // overwrite $, so this string got not read in multiple times
 						gpsTypFound |= 0x2; //erfolgreich GPGGA eingelesen
 					}
 				}
 				else {} // nop; einen anderen Sentences gefunden, buffer enthält aber mehrere also weitersuchen
 		} // ende if der '$' suche
+		// NMEA Senstence Suche abgeschlossen
+		// TODO: read in new timestamp (if newer) 
+		//if(gpsTypFound & 0x01){ gpsActualDataset;	} //new RMC found read in new Time in first datafield after first comma (hhmmss)
+			// and also date 9th datefield after 9th comma (ddmmyy)
 		if(gpsTypFound==0x3) return 0; // abbruch Erfolgreich wenn beide NMEA mindestens einmal gefunden wurden
 		cursor++;
 	} // ende while der '$' suche
 	
 	// string enthielt nicht beide Sätze vollständig und Buffer ist komplett durchsucht worden
-	if(gpsTypFound==0x01) strcpy(gpsActualDataset->NMEA_GPGGA, "kein GPGGA empfangen * ");
+	// TODO: this is for debugging, delete this later to preserve last NMEA String and dont overwrite it with this ****
+	/*if(gpsTypFound==0x01) strcpy(gpsActualDataset->NMEA_GPGGA, "kein GPGGA empfangen * ");
 	else if(gpsTypFound==0x02) strcpy(gpsActualDataset->NMEA_GPRMC, "kein GPRMC empfangen * ");
-	return -1; 
-
+	*/
+	return gpsTypFound-1; // so its always >0 only if no used NMEA found then its -1 (error"")
+	
 	
 // so kann man schauen, ob in dem Datensatz schon was steht oder noch leer
 //gpsActualDataset->NMEA_GPGGA[0] != '$'..... strcmp(

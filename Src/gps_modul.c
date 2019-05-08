@@ -68,7 +68,7 @@ int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
 	// nach gefunden testen, ob zwischen '$' und '*' <=80 Zeichen 
 	// wenn erwartete Anzahl an Komma enthalten, ist Satz richtig und wird in diesem Buffer einleseVorgang nicht mehr eingelesen
 	// ist es nicht, ist er moeglicherweise korruptiert und wird beim naechsten mal eingelesen
-	while((GPS_RINGBUFFER_SIZE-2) > cursor && pNewNmeaString[cursor] != '\0' ){
+	while((GPS_RINGBUFFER_SIZE-2) > cursor){
 		if(pNewNmeaString[cursor] == '$'){
 			// NMEA-Sentence Anfang gefunden an stelle cursor // wenn neuer satz durch $ gefunden. diese Var zuruecksetzen
 			copyindex = 0;
@@ -81,7 +81,8 @@ int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
 				&& pNewNmeaString[cursor+5]=='C' && pNewNmeaString[cursor+6]==','){
 					// GPRMC Sentence entdeckt
 					// Datensatz von Null ab füllen, aus Eingangs-String mit offset, wo das $ beginnt ($ mitkopieren)
-					while(80 > copyindex && pNewNmeaString[cursor+copyindex] != '\0' && pNewNmeaString[cursor+copyindex] != '*')	{
+					while(80 > copyindex && pNewNmeaString[(cursor+copyindex)%GPS_RINGBUFFER_SIZE] != '\0' && pNewNmeaString[(cursor+copyindex)%GPS_RINGBUFFER_SIZE] != '*'
+							&& pNewNmeaString[(cursor+copyindex)%GPS_RINGBUFFER_SIZE] != '\r' && pNewNmeaString[(cursor+copyindex)%GPS_RINGBUFFER_SIZE] != '\n')	{
 						/* vom $ an werden bis * oder Stringende maximal 80 Zeichen kopiert. 
 						 kommt cursor+copyindex ans Ende des Buffers, zB. Size=500, ans 500 Zeichen, also Index 499 so wird das kopiert
 						danach beim index 500 greift Modulo und man kopiert vom 1. Zeichen mit index 0 (->ringbuffer)*/
@@ -89,20 +90,21 @@ int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
 						if(gpsActualDataset->NMEA_GPRMC[copyindex] == ',')kommaZaehlerValidierung++;
 						copyindex++;
 					}
-					gpsActualDataset->NMEA_GPRMC[copyindex] = '\0'; // stringende ans Ende
+					gpsActualDataset->NMEA_GPRMC[copyindex] = '\0'; // stringende ans Ende.  Eigentlich könnte zwischen Text und \0 ein <CR><LF> bzw \r\n wird aber formatierung in CSV
 					if(kommaZaehlerValidierung == GPRMC_ANZAHL_KOMMA){
 						gpsTypFound |= 0x1; //erfolgreich GPRMC eingelesen
 					}
 				}
 			// wenn dieser Typ noch nicht gefunden wurde, gefundene NMEA-Sentence weiter danach untersuchen
 			else if(((gpsTypFound & 0x2) != 0)
-				&& pNewNmeaString[cursor+1]=='G' && pNewNmeaString[cursor+2]=='P' 
-				&& pNewNmeaString[cursor+3]=='G' && pNewNmeaString[cursor+4]=='G' 
-				&& pNewNmeaString[cursor+5]=='A' && pNewNmeaString[cursor+6]==','){
+				&& pNewNmeaString[(cursor+1)%GPS_RINGBUFFER_SIZE]=='G' && pNewNmeaString[(cursor+2)%GPS_RINGBUFFER_SIZE]=='P' 
+				&& pNewNmeaString[(cursor+3)%GPS_RINGBUFFER_SIZE]=='G' && pNewNmeaString[(cursor+4)%GPS_RINGBUFFER_SIZE]=='G' 
+				&& pNewNmeaString[(cursor+5)%GPS_RINGBUFFER_SIZE]=='A' && pNewNmeaString[(cursor+6)%GPS_RINGBUFFER_SIZE]==','){
 					// GPGGA Sentence entdeckt
 					// Datensatz von Null ab füllen, aus Eingangs-String mit offset, wo das $ beginnt ($ mitkopieren)
-					while(80 > copyindex && pNewNmeaString[cursor+copyindex] != '\0' && pNewNmeaString[cursor+copyindex] != '*')	{
-						gpsActualDataset->NMEA_GPGGA[copyindex] = pNewNmeaString[cursor+copyindex];
+					while(80 > copyindex && pNewNmeaString[(cursor+copyindex)%GPS_RINGBUFFER_SIZE] != '\0' && pNewNmeaString[(cursor+copyindex)%GPS_RINGBUFFER_SIZE] != '*'
+								&& pNewNmeaString[(cursor+copyindex)%GPS_RINGBUFFER_SIZE] != '\r' && pNewNmeaString[(cursor+copyindex)%GPS_RINGBUFFER_SIZE] != '\n')	{
+						gpsActualDataset->NMEA_GPGGA[copyindex] = pNewNmeaString[(cursor+copyindex)%GPS_RINGBUFFER_SIZE];
 						if(gpsActualDataset->NMEA_GPGGA[copyindex] == ',')kommaZaehlerValidierung++;
 						copyindex++;
 					}
@@ -113,13 +115,13 @@ int GPS_sortInNewData(s_gpsSetOfData* gpsActualDataset, char* pNewNmeaString)
 				}
 				else {} // nop; einen anderen Sentences gefunden, buffer enthält aber mehrere also weitersuchen
 		} // ende if der '$' suche
-		if(gpsTypFound==0x3) return 0; // abbruch wenn beide NMEA mindestens einmal gefunden wurden
+		if(gpsTypFound==0x3) return 0; // abbruch Erfolgreich wenn beide NMEA mindestens einmal gefunden wurden
 		cursor++;
 	} // ende while der '$' suche
 	
-	// string enthielt nicht beide Sätze vollständig
-	if(gpsTypFound==0x01) sprintf(gpsActualDataset->NMEA_GPGGA, "kein GPGGA empfangen * ");
-	else if(gpsTypFound==0x02) sprintf(gpsActualDataset->NMEA_GPRMC, "kein GPRMC empfangen * ");
+	// string enthielt nicht beide Sätze vollständig und Buffer ist komplett durchsucht worden
+	if(gpsTypFound==0x01) strcpy(gpsActualDataset->NMEA_GPGGA, "kein GPGGA empfangen * ");
+	else if(gpsTypFound==0x02) strcpy(gpsActualDataset->NMEA_GPRMC, "kein GPRMC empfangen * ");
 	return -1; 
 
 	

@@ -12,8 +12,8 @@
 /* Private variables ---------------------------------------------------------*/
 typedef struct {
 	struct tm timestamp;													/* Timestamp of the dataset (from GNSS) */
-	char* NMEA_GPRMC; 			  										/*GPRMC pointer to actual position of the system (from GNSS) */
-	char* NMEA_GPGGA; 			  										/*GPGGA pointer to actual position of the system (from GNSS) */  
+	char NMEA_GPRMC[82]; 			  								  /*GPRMC string (from GNSS) */
+	char NMEA_GPGGA[82]; 			  									/*GPGGA string (from GNSS) */  
 	s_accelerometerValuesFloat acceleration;			/* actual acceleration of the system (from MEMS) */
 	int16_t temperature;													/* actual temperature (from LM335) */
 	char open;								    								/* is package open (from photo diode) */

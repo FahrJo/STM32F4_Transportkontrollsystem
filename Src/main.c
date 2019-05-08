@@ -323,17 +323,17 @@ int main(void)
 					g_newGPSData = 1; // always read in. TODO: this is a workaround as long the DMA-IRQ does not do what it should
 					if(g_newGPSData){					/* check for new UART GPS Data, and read in before using GPS dataset */
 						HAL_UART_DMAPause(&huart3); //pause DMA um Datenkonstistenz zu gewährleisten
-						GPS_sortInNewData(&gpsActualDataset, gpsRxRingBuffer);		/* read in new data */
+						int returnValue = GPS_sortInNewData(&gpsActualDataset, gpsRxRingBuffer);		/* read in new data */
 						HAL_UART_DMAResume(&huart3);
+						// read in new time from GPS only when GPS Timestamp is newer than old timestamp from GPS. Else we jump back in time (bc. Time get incremented intern) 
+						// TODO: add gps parse time in this struct -> then incomment the next line						
+						//if(returnValue==0) clock_time = gpsActualDataset.gps_timestamp; // check if this is ok, or only copy a pointer
 						g_newGPSData = 0; 									/* reset flag	*/
 					}
-					/* aus aktuellem GPS Set */
-				//	strcpy(sensor_set[actualSet].NMEA_GPGGA, gpsActualDataset.NMEA_GPGGA);
-			  //	strcpy(sensor_set[actualSet].NMEA_GPRMC, gpsActualDataset.NMEA_GPRMC); // so wenn sensorSet zweimal char[80] enthält
-					sensor_set[actualSet].NMEA_GPRMC = gpsActualDataset.NMEA_GPRMC;
-					sensor_set[actualSet].NMEA_GPGGA = gpsActualDataset.NMEA_GPGGA;
-					// read in new time from GPS only when GPS Timestamp is newer than old timestamp form GPS. Else we jump back in time (bc. Time get incremented intern) 
-					sensor_set[actualSet].timestamp = clock_time;		/* von Timer incrementiert, kann aber auch noch von GPS ab und so korrigiert werden */
+					/* aus aktuellem GPS Set Position immer kopieren, weil da ist es besser die letzte zu haben als keine*/
+					strcpy(sensor_set[actualSet].NMEA_GPGGA, gpsActualDataset.NMEA_GPGGA);
+			  	strcpy(sensor_set[actualSet].NMEA_GPRMC, gpsActualDataset.NMEA_GPRMC); 					
+					sensor_set[actualSet].timestamp = clock_time;		/* von Timer incrementiert, wird aber auch noch von GPS ab und so korrigiert werden */
 				}
 			}
 			

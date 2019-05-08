@@ -4,6 +4,7 @@
 #include "stm32f4xx_hal.h"
 #include <stdint.h>
 #include "hilfsfunktionen.h"
+#include "time.h"
 
 #define GPS_RINGBUFFER_SIZE 700
 #define GPGGA_ANZAHL_KOMMA 14
@@ -11,11 +12,11 @@
 
 
 typedef struct {
-	char NMEA_GPRMC[80]; // $GPRMC,blabli
-	char NMEA_GPGGA[80]; // $GPGGA,blabla
-	uint16_t actualPos[2]; //fraglich ob diese mit in die Funktion sollen)
+	char NMEA_GPRMC[82]; // $GPRMC,
+	char NMEA_GPGGA[82]; // $GPGGA,
+	uint16_t actualPos[2]; //kann fuer deltaStrecke verwendet werden, nicht benutzt bis jetzt
 	uint16_t lastPos[2];
-	char savedToSD;
+	struct tm gps_timestamp;
 }s_gpsSetOfData;
 
 

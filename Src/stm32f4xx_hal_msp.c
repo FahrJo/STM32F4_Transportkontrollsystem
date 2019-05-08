@@ -191,19 +191,19 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
     PC9     ------> I2C3_SDA
     PA8     ------> I2C3_SCL 
     */
-    GPIO_InitStruct.Pin = SDA_Accelerometer_GNSS_Pin;
+    GPIO_InitStruct.Pin = SDA_Accelerometer_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF4_I2C3;
-    HAL_GPIO_Init(SDA_Accelerometer_GNSS_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(SDA_Accelerometer_GPIO_Port, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = SCL_Accelerometer_GNSS_Pin;
+    GPIO_InitStruct.Pin = SCL_Accelerometer_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF4_I2C3;
-    HAL_GPIO_Init(SCL_Accelerometer_GNSS_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(SCL_Accelerometer_GPIO_Port, &GPIO_InitStruct);
 
     /* Peripheral clock enable */
     __HAL_RCC_I2C3_CLK_ENABLE();
@@ -234,9 +234,9 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
     PC9     ------> I2C3_SDA
     PA8     ------> I2C3_SCL 
     */
-    HAL_GPIO_DeInit(SDA_Accelerometer_GNSS_GPIO_Port, SDA_Accelerometer_GNSS_Pin);
+    HAL_GPIO_DeInit(SDA_Accelerometer_GPIO_Port, SDA_Accelerometer_Pin);
 
-    HAL_GPIO_DeInit(SCL_Accelerometer_GNSS_GPIO_Port, SCL_Accelerometer_GNSS_Pin);
+    HAL_GPIO_DeInit(SCL_Accelerometer_GPIO_Port, SCL_Accelerometer_Pin);
 
   /* USER CODE BEGIN I2C3_MspDeInit 1 */
 

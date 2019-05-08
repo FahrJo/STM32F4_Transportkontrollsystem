@@ -3,6 +3,7 @@
 #include "fatfs.h"
 #include "main.h"
 #include "acceleration_Sensor.h"
+#include <stdio.h>
 #include <stdint.h>
 #include <time.h>
 #include <string.h>

@@ -63,6 +63,7 @@ DMA_HandleTypeDef hdma_usart3_rx;
 uint8_t GET_DATA;														 		/* Initialisierungswert fuer das Sammeln eines kompletten Datensatzes */
 
 configuration config;
+GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 static int Preferences_Handler(void* user, const char* section, const char* name, const char* value);		/* Handler für Config-Parser */
 
@@ -184,6 +185,16 @@ int main(void)
   MX_SPI1_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+	
+	/* I2C-Bus auf 3 Volt ziehen (Bug-Workaround) ------------------------------*/
+	HAL_GPIO_WritePin(I2C_INIT_SCL_GPIO_Port, I2C_INIT_SCL_Pin|I2C_INIT_SDA_Pin, GPIO_PIN_SET);		/* Pull der Busleitungen auf VDD */
+	HAL_Delay(200);
+	//HAL_GPIO_WritePin(I2C_INIT_SCL_GPIO_Port, I2C_INIT_SCL_Pin|I2C_INIT_SDA_Pin, GPIO_PIN_RESET); 	/* Pull der Busleitungen auf GND */
+	GPIO_InitStruct.Pin = I2C_INIT_SCL_Pin|I2C_INIT_SDA_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;						/* HiZ */
+  HAL_GPIO_Init(I2C_INIT_SCL_GPIO_Port, &GPIO_InitStruct);		/* Umkonfiguration der Ausgäge zu Aingängen */
+	
 	
 	/* Vorbereiten der SD-Karte ------------------------------------------------*/
 	if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
@@ -630,7 +641,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOE, CS_I2C_SPI_Pin|GPS_ONOFF_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(OTG_FS_PowerSwitchOn_GPIO_Port, OTG_FS_PowerSwitchOn_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOC, OTG_FS_PowerSwitchOn_Pin|I2C_INIT_SCL_Pin|I2C_INIT_SDA_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPS_Reset_out_GPIO_Port, GPS_Reset_out_Pin, GPIO_PIN_RESET);
@@ -646,12 +657,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : OTG_FS_PowerSwitchOn_Pin */
-  GPIO_InitStruct.Pin = OTG_FS_PowerSwitchOn_Pin;
+  /*Configure GPIO pins : OTG_FS_PowerSwitchOn_Pin I2C_INIT_SCL_Pin I2C_INIT_SDA_Pin */
+  GPIO_InitStruct.Pin = OTG_FS_PowerSwitchOn_Pin|I2C_INIT_SCL_Pin|I2C_INIT_SDA_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(OTG_FS_PowerSwitchOn_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PDM_OUT_Pin */
   GPIO_InitStruct.Pin = PDM_OUT_Pin;

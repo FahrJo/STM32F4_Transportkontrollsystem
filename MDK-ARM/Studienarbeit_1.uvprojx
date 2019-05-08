@@ -336,7 +336,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>  ../MDK-ARM;       ..\GPS_NMEA_parser-master;       ..\GPS_NMEA_parser-master\00-GPS_LIBRARY;  ../Inc;  ../Drivers/STM32F4xx_HAL_Driver/Inc;  ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;  ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;  ../Middlewares/Third_Party/FatFs/src;  ../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>  ../MDK-ARM;          ..\GPS_NMEA_parser-master;          ..\GPS_NMEA_parser-master\00-GPS_LIBRARY;     ../Inc;     ../Drivers/STM32F4xx_HAL_Driver/Inc;     ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;     ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;     ../Middlewares/Third_Party/FatFs/src;     ../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -401,6 +401,16 @@
               <FilePath>..\Src\acceleration_sensor.c</FilePath>
             </File>
             <File>
+              <FileName>gps_modul.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\gps_modul.c</FilePath>
+            </File>
+            <File>
+              <FileName>ini.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\ini.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/main.c</FilePath>
@@ -426,6 +436,11 @@
               <FilePath>../Src/fatfs_platform.c</FilePath>
             </File>
             <File>
+              <FileName>user_diskio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/user_diskio.c</FilePath>
+            </File>
+            <File>
               <FileName>stm32f4xx_it.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32f4xx_it.c</FilePath>
@@ -434,16 +449,6 @@
               <FileName>stm32f4xx_hal_msp.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32f4xx_hal_msp.c</FilePath>
-            </File>
-            <File>
-              <FileName>gps_modul.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\gps_modul.c</FilePath>
-            </File>
-            <File>
-              <FileName>ini.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\ini.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -560,6 +565,11 @@
               <FileType>1</FileType>
               <FilePath>../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f4xx_hal_exti.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -576,11 +586,6 @@
           <GroupName>Middlewares/FatFs</GroupName>
           <Files>
             <File>
-              <FileName>syscall.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Middlewares/Third_Party/FatFs/src/option/syscall.c</FilePath>
-            </File>
-            <File>
               <FileName>diskio.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Middlewares/Third_Party/FatFs/src/diskio.c</FilePath>
@@ -594,6 +599,11 @@
               <FileName>ff_gen_drv.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Middlewares/Third_Party/FatFs/src/ff_gen_drv.c</FilePath>
+            </File>
+            <File>
+              <FileName>syscall.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Middlewares/Third_Party/FatFs/src/option/syscall.c</FilePath>
             </File>
           </Files>
         </Group>

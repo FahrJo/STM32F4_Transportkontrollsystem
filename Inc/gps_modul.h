@@ -1,6 +1,7 @@
 #ifndef GPS_MODULH
 #define GPS_MODULH
 
+#include "main.h"
 #include "stm32f4xx_hal.h"
 #include <stdint.h>
 #include "hilfsfunktionen.h"

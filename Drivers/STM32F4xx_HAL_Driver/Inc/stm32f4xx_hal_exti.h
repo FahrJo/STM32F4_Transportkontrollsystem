@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
   * @file    stm32f4xx_hal_exti.h
-  * @author  MCD Application Team   // TODO: Silas von mir manuell hinzugefuegt
+  * @author  MCD Application Team
   * @brief   Header file of EXTI HAL module.
   ******************************************************************************
   * @attention

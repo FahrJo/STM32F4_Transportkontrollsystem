@@ -1,6 +1,6 @@
 Configuration	Studienarbeit_1
 STM32CubeMX 	5.1.0
-Date	04/17/2019
+Date	05/07/2019
 MCU	STM32F407VGTx
 
 
@@ -22,6 +22,8 @@ SPI1	Full-Duplex Master	SPI1_SCK	PA5
 SYS	Serial Wire	SYS_JTCK-SWCLK	PA14
 SYS	Serial Wire	SYS_JTMS-SWDIO	PA13
 SYS	SysTick	SYS_VS_Systick	VP_SYS_VS_Systick
+USART3	Asynchronous	USART3_RX	PB11
+USART3	Asynchronous	USART3_TX	PD8
 
 
 
@@ -42,13 +44,17 @@ Pin Nb	PINs	FUNCTIONs	LABELs
 31	PA6	SPI1_MISO	SPI1_MISO [LIS302DL_SDO]
 32	PA7	SPI1_MOSI	SPI1_MOSI [LIS302DL_SDA/SDI/SDO]
 33	PC4	GPIO_EXTI4	INT_Acceleration2
+35	PB0	GPIO_Output	GPS_Reset_out
 37	PB2	GPIO_Input	BOOT1
+41	PE10	GPIO_Input	GPS_WakeUp
+43	PE12	GPIO_Output	GPS_ONOFF
 47	PB10*	I2S2_CK	CLK_IN [MP45DT02_CLK]
+48	PB11	USART3_RX	
+55	PD8	USART3_TX	
 59	PD12	GPIO_Output	LED4 [Green Led]
 60	PD13	GPIO_Output	LED3 [Orange Led]
 61	PD14	GPIO_Output	LED5 [Red Led]
 62	PD15	GPIO_Output	LED6 [Blue Led]
-64	PC7	GPIO_Input	SDIO_detect
 65	PC8	SDIO_D0	
 66	PC9	I2C3_SDA	SDA_Accelerometer+GNSS
 67	PA8	I2C3_SCL	SCL_Accelerometer+GNSS
@@ -81,6 +87,8 @@ SPI1	Full-Duplex Master	SPI1_SCK	PA5
 SYS	Serial Wire	SYS_JTCK-SWCLK	PA14
 SYS	Serial Wire	SYS_JTMS-SWDIO	PA13
 SYS	SysTick	SYS_VS_Systick	VP_SYS_VS_Systick
+USART3	Asynchronous	USART3_RX	PB11
+USART3	Asynchronous	USART3_TX	PD8
 
 
 
@@ -101,13 +109,17 @@ Pin Nb	PINs	FUNCTIONs	LABELs
 31	PA6	SPI1_MISO	SPI1_MISO [LIS302DL_SDO]
 32	PA7	SPI1_MOSI	SPI1_MOSI [LIS302DL_SDA/SDI/SDO]
 33	PC4	GPIO_EXTI4	INT_Acceleration2
+35	PB0	GPIO_Output	GPS_Reset_out
 37	PB2	GPIO_Input	BOOT1
+41	PE10	GPIO_Input	GPS_WakeUp
+43	PE12	GPIO_Output	GPS_ONOFF
 47	PB10*	I2S2_CK	CLK_IN [MP45DT02_CLK]
+48	PB11	USART3_RX	
+55	PD8	USART3_TX	
 59	PD12	GPIO_Output	LED4 [Green Led]
 60	PD13	GPIO_Output	LED3 [Orange Led]
 61	PD14	GPIO_Output	LED5 [Red Led]
 62	PD15	GPIO_Output	LED6 [Blue Led]
-64	PC7	GPIO_Input	SDIO_detect
 65	PC8	SDIO_D0	
 66	PC9	I2C3_SDA	SDA_Accelerometer+GNSS
 67	PA8	I2C3_SCL	SCL_Accelerometer+GNSS
@@ -130,7 +142,7 @@ SOFTWARE PROJECT
 
 Project Settings : 
 Project Name : Studienarbeit_1
-Project Folder : /Users/Johannes/Documents/KEIL/Studienarbeit_1
+Project Folder : \\Mac\Home\Documents\KEIL\Studienarbeit_1
 Toolchain / IDE : MDK-ARM V5
 Firmware Package Name and Version : STM32Cube FW_F4 V1.21.0
 

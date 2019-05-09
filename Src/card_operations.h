@@ -29,4 +29,4 @@ FRESULT write_string_to_file(FIL* logFile_p, const TCHAR* logFileName_p, const v
 FRESULT write_dataset_to_file(FIL* logFile_p, const TCHAR* logFileName_p, dataset* dataset_p, UINT size_of_dataset, UINT* cursor);
 	
 /* Convert the data in the struct to a string */
-void convert_dataset_to_string(dataset* dataset_p, char* dataset_string);
+void convert_dataset_to_string(dataset* dataset_p, char* dataset_string, int sizeofdataset_string);

@@ -78,8 +78,8 @@ FIL 						logFile;												/* Dateihandle auf SD-Karte (Log-Datei) */
 FIL 						configFile;											/* Dateihandle auf SD-Karte (Initialisierungsdatei)*/
 UINT 						cursor;													/* Letztes Zeichen in CSV-Datei (Log-Datei) */
 UINT 						configCursor;										/* Letztes Zeichen in CSV-Datei Initialisierungsdatei) */
-char 						logFileName[] = "LogFile.csv";
-char 						configFileName[] = "config.ini";
+char 						logFileName[] = "0:/LogFile.csv";
+char 						configFileName[] = "0:/config.ini";
 char * 					configBuffer;
 char 						header[200];
 uint32_t 				Temp_Raw;												/* Temperatur in 12 Bit aus ADC */
@@ -107,7 +107,6 @@ uint8_t					getAcceleration;
 uint8_t					getPosition;
 uint8_t					writeDataset;
 
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,6 +124,7 @@ void Timer4_Init(void);
 void AnalogWDG_Init(void);
 void error_blink(uint16_t GPIO_Pin, uint16_t n, uint16_t dt);
 void writeToFile(void);
+int ini_parse_fatfs(FIL* file, const char* filename, ini_handler handler, void* user);
 
 /* USER CODE END PFP */
 
@@ -189,30 +189,23 @@ int main(void)
 	/* I2C-Bus auf 3 Volt ziehen (Bug-Workaround) ------------------------------*/
 	HAL_GPIO_WritePin(I2C_INIT_SCL_GPIO_Port, I2C_INIT_SCL_Pin|I2C_INIT_SDA_Pin, GPIO_PIN_SET);		/* Pull der Busleitungen auf VDD */
 	HAL_Delay(200);
-	//HAL_GPIO_WritePin(I2C_INIT_SCL_GPIO_Port, I2C_INIT_SCL_Pin|I2C_INIT_SDA_Pin, GPIO_PIN_RESET); 	/* Pull der Busleitungen auf GND */
 	GPIO_InitStruct.Pin = I2C_INIT_SCL_Pin|I2C_INIT_SDA_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;						/* HiZ */
   HAL_GPIO_Init(I2C_INIT_SCL_GPIO_Port, &GPIO_InitStruct);		/* Umkonfiguration der Ausgäge zu Aingängen */
 	
-	
 	/* Vorbereiten der SD-Karte ------------------------------------------------*/
 	if(f_mount(&myFatFS, SDPath, 1) == FR_OK){
-		if(f_open(&configFile, configFileName, FA_READ | FA_OPEN_EXISTING) == FR_OK){
-			configBuffer = calloc((f_size(&configFile) + 2), sizeof(char));		/* Reserviert Speicherbereich für den String der ganzen Konfigurationsdatei */ 
-			f_read(&configFile, configBuffer, sizeof(configBuffer), &configCursor);		/* liest Konfigurationsdatei in den String für die folgende Auswertung */
-			if (ini_parse_string(configBuffer, Preferences_Handler, &config) < 0) {		/* wertet den String aus und setzt die entsprechenden Parameter */
-        error_blink(LED3_Pin, 5, 500);					/* wenn Lesefehler an config.ini dann blinkt orangene LED3 5 mal lang */
-			}
-			free(configBuffer);												/* Gibt dynamisch reservierten Speicherbereich wieder frei */
+		if(ini_parse_fatfs(&configFile, configFileName, Preferences_Handler, &config) != FR_OK) {		/* Auslesen der Initialisierungsdatei */
+			error_blink(LED3_Pin, 5, 500);					/* wenn Lesefehler an config.ini dann blinkt orangene LED3 5 mal lang */
 		}
-		sprintf(header, "Tracking-Log;t_min:;%i;t_max:;%i;Acc_max:;%1f;\n Date/Time;Location (GPRMC);Location (GPGGA);Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n", config.MIN_TEMP, config.MAX_TEMP, config.MAX_ACC);
+		sprintf(header, "Tracking-Log;t_min:;%i;t_max:;%i;Acc_max:;%1.3f;\n Date/Time;Location (GPRMC);Location (GPGGA);Acceleration X; Acceleration Y; Acceleration Z;Temp;Open;Note\n", config.MIN_TEMP, config.MAX_TEMP, config.MAX_ACC);
 		write_string_to_file(&logFile, logFileName, header,	sizeof(header), &cursor);
 	}
 	else{
 		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);		/* Orangene LED3 leuchtet dauerhaft, wenn SD-Karte  nicht initialisiert werden konnte */
 	}
-
+	
 	Timer4_Init();
 	
 		
@@ -222,7 +215,6 @@ int main(void)
 		ACC_deactivate(&hi2c3);
 		HAL_Delay(500);
 		ACC_activate(&hi2c3);
-		HAL_Delay(500);
 	}
 	
 	/* GPS-Empfänger aktivieren ------------------------------------------------*/
@@ -248,7 +240,7 @@ int main(void)
 
 	/* Starte ADC --------------------------------------------------------------*/
 	if(config.TEMP_ENABLE){
-		//AnalogWDG_Init();														/* Analog Watchdog konfigurieren */
+		AnalogWDG_Init();														/* Analog Watchdog konfigurieren */
 		HAL_ADC_Start_DMA(&hadc1, &Temp_Raw, 1);		/* ADC->Mem DMA starten */
 		HAL_ADC_Start_IT(&hadc1);										/* ADC-WDG Interrupt aktivieren */
 	}
@@ -327,7 +319,7 @@ int main(void)
 						HAL_UART_DMAResume(&huart3);
 						// read in new time from GPS only when GPS Timestamp is newer than old timestamp from GPS. Else we jump back in time (bc. Time get incremented intern) 
 						// TODO: add gps parse time in this struct -> then incomment the next line						
-						//if(returnValue!=-1) clock_time = gpsActualDataset.gps_timestamp; // check if this is ok, or only copy a pointer
+						//if(returnValue==0) clock_time = gpsActualDataset.gps_timestamp; // check if this is ok, or only copy a pointer
 						g_newGPSData = 0; 									/* reset flag	*/
 					}
 					/* aus aktuellem GPS Set Position immer kopieren, weil da ist es besser die letzte zu haben als keine*/
@@ -523,7 +515,7 @@ static void MX_SDIO_SD_Init(void)
   hsd.Init.ClockPowerSave = SDIO_CLOCK_POWER_SAVE_DISABLE;
   hsd.Init.BusWide = SDIO_BUS_WIDE_1B;
   hsd.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
-  hsd.Init.ClockDiv = 3;
+  hsd.Init.ClockDiv = 5;
   /* USER CODE BEGIN SDIO_Init 2 */
 
   /* USER CODE END SDIO_Init 2 */
@@ -864,6 +856,18 @@ void TIM4_IRQHandler() {
 }
 
 /* INIH Handler --------------------------------------------------------------*/
+int ini_parse_fatfs(FIL* file, const char* filename, ini_handler handler, void* user)
+{
+    FRESULT result;
+    int error;
+
+    result = f_open(file, filename, FA_OPEN_EXISTING | FA_READ);
+    if (result != FR_OK)
+        return -1;
+    error = ini_parse_stream((ini_reader)f_gets, file, handler, user);
+    f_close(file);
+    return error;
+}
 
 static int Preferences_Handler(void* user, const char* section, const char* name, const char* value) {
     configuration* pconfig = (configuration*)user;

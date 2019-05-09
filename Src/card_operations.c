@@ -4,7 +4,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 FRESULT return_value;
-char dataset_string[512];
+char dataset_string[255];
 char buffer_string[64];
 BYTE mode0 = FA_WRITE | FA_CREATE_ALWAYS;
 BYTE mode = FA_WRITE | FA_OPEN_APPEND;
@@ -41,7 +41,7 @@ FRESULT write_dataset_to_file(FIL* logFile_p, const TCHAR* logFileName_p, datase
 	return_value = f_open(logFile_p, logFileName_p, mode);
 	if(return_value == FR_OK){
 		for(int count = 0; count < size_of_dataset; count++){									// TODO: geht das so???
-			convert_dataset_to_string(dataset_p + count, dataset_string);												// Konvertieren des Datensatzes in einen String
+			convert_dataset_to_string(dataset_p + count, dataset_string, sizeof(dataset_string));												// Konvertieren des Datensatzes in einen String
 			for(int block = 0; block < 4; block++){
 				return_value = f_write(logFile_p, dataset_string + (block * 32), 32, cursor);
 			}
@@ -61,8 +61,8 @@ FRESULT write_dataset_to_file(FIL* logFile_p, const TCHAR* logFileName_p, datase
 
 
 /* Convert the data in the struct to a string --------------------------------*/
-void convert_dataset_to_string(dataset* dataset_p, char* dataset_string){
-	for(int i = 0; i < 128; i++){
+void convert_dataset_to_string(dataset* dataset_p, char* dataset_string, int sizeofdataset_string){
+	for(int i = 0; i < sizeofdataset_string; i++){
 		dataset_string[i] = 0;
 	}
 	sprintf(dataset_string, "%04i-%02i-%02i-%02i:%02i:%02i;", dataset_p->timestamp.tm_year, dataset_p->timestamp.tm_mon, dataset_p->timestamp.tm_mday, dataset_p->timestamp.tm_hour, dataset_p->timestamp.tm_min, dataset_p->timestamp.tm_sec);

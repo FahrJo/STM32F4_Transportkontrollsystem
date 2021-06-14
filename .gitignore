@@ -10,4 +10,4 @@ MDK-ARM/Studienarbeit_1/
 *.axf
 *.uvoptx
 *.lst
-.DS_Store
+*.DS_Store
